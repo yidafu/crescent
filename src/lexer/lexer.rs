@@ -1,6 +1,6 @@
-use super::token::Token;
 use super::chunk_stream::ChunkStream;
-use super::utils::{is_whitespace, is_digit, is_hex_digit, is_letter};
+use super::token::Token;
+use super::utils::{is_digit, is_hex_digit, is_letter, is_whitespace};
 
 struct Lexer {
     pub stream: ChunkStream,
@@ -177,12 +177,8 @@ impl Lexer {
                 // self.stream.next();
                 self.parse_short_string()
             }
-            c if is_digit(c) => {
-                self.parse_number()
-            }
-            c if is_letter(c) => {
-                self.parse_identifier()
-            }
+            c if is_digit(c) => self.parse_number(),
+            c if is_letter(c) => self.parse_identifier(),
             _ => todo!(),
         }
     }
@@ -206,7 +202,9 @@ impl Lexer {
         if c == '[' {
             self.skip_specific_char('[');
             let mut long_string = String::new();
-            while self.stream.peek() != ']' || (self.stream.peek() == '[' && self.stream.peek2() != ']') {
+            while self.stream.peek() != ']'
+                || (self.stream.peek() == '[' && self.stream.peek2() != ']')
+            {
                 long_string.push(self.stream.next());
             }
             Token::string_token(&long_string)
@@ -230,7 +228,11 @@ impl Lexer {
         let mut short_string = String::new();
         while self.stream.peek() != quota {
             if self.stream.peek() == '\n' {
-                panic!("unfinished string near {} at {}", short_string, self.stream.get_position());
+                panic!(
+                    "unfinished string near {} at {}",
+                    short_string,
+                    self.stream.get_position()
+                );
             }
             short_string.push(self.stream.next());
         }
@@ -273,9 +275,7 @@ impl Lexer {
                 }
                 Token::number_token(&number_string)
             }
-            _ => {
-                Token::number_token(&number_string)
-            }
+            _ => Token::number_token(&number_string),
         }
     }
 
@@ -309,7 +309,7 @@ impl Lexer {
             "true" => Token::true_token(),
             "until" => Token::until_token(),
             "while" => Token::while_token(),
-            _ => Token::identifier_token(&identifier_string)
+            _ => Token::identifier_token(&identifier_string),
         }
     }
 
@@ -361,13 +361,14 @@ fn test_parse_long_string() {
     assert_eq!(lexer.next_token(), Token::string_token("line 1\nline 2"));
 }
 
-
 #[test]
 fn test_parse_short_string() {
     let mut lexer = Lexer {
         stream: ChunkStream {
             chunk_name: String::from("test.lua"),
-            chunk: String::from("'short string'\n\"long string\"").chars().collect(),
+            chunk: String::from("'short string'\n\"long string\"")
+                .chars()
+                .collect(),
             line: 1,
             column: 0,
             index: 0,
@@ -409,14 +410,14 @@ fn test_parse_oparetor() {
     assert_eq!(lexer.next_token(), Token::lt_token());
 }
 
-
-
 #[test]
 fn test_parse_digit() {
     let mut lexer = Lexer {
         stream: ChunkStream {
             chunk_name: String::from("test.lua"),
-            chunk: String::from("0 3 345 0xff 0xBEBADA 3.0 3.1416").chars().collect(),
+            chunk: String::from("0 3 345 0xff 0xBEBADA 3.0 3.1416")
+                .chars()
+                .collect(),
             line: 1,
             column: 0,
             index: 0,
@@ -432,13 +433,14 @@ fn test_parse_digit() {
     assert_eq!(lexer.next_token(), Token::number_token("3.1416"));
 }
 
-
 #[test]
 fn test_parse_identifier() {
     let mut lexer = Lexer {
         stream: ChunkStream {
             chunk_name: String::from("test.lua"),
-            chunk: String::from("if true then else end function() end").chars().collect(),
+            chunk: String::from("if true then else end function() end")
+                .chars()
+                .collect(),
             line: 1,
             column: 0,
             index: 0,
