@@ -1,24 +1,51 @@
 use super::chunk_stream::ChunkStream;
-use super::token::Token;
+use super::token::{Token, TokenType};
 use super::utils::{is_digit, is_hex_digit, is_letter, is_whitespace};
 
-struct Lexer {
+pub(crate) struct Lexer {
     pub stream: ChunkStream,
+    pub current_token: Token,
+    pub is_parsing_token: bool,
 }
 
 impl Lexer {
-    fn peek_token() -> Token {
-        Token::eof_token()
+    pub fn new(steam: ChunkStream) -> Lexer {
+        Lexer {
+            stream: steam,
+            current_token: Token::eof_token(),
+            is_parsing_token: false,
+        }
     }
 
-    fn next_token(&mut self) -> Token {
+    pub fn peek_token(&mut self) -> Token {
+        if !self.is_parsing_token {
+            self.is_parsing_token = true;
+            self.current_token = self.next_token();
+        }
+        self.current_token.clone()
+    }
+
+    pub fn next_special_token(&mut self, kind: TokenType) -> Token {
+        let token = self.next_token();
+        if token.kind != kind {
+            panic!("Expect token {}, but got {:?}", kind, token)
+        }
+        token
+    }
+
+    pub fn next_identifier_token(&mut self) -> Token {
+        self.next_special_token(TokenType::Identifier)
+    }
+
+    pub fn next_token(&mut self) -> Token {
+        self.is_parsing_token = true;
         self.skip_white_space();
         if self.eof() {
             return Token::eof_token();
         }
 
         let char = self.stream.peek();
-        match char {
+        let token = match char {
             ';' => {
                 self.stream.next();
                 Token::semi_token()
@@ -180,7 +207,10 @@ impl Lexer {
             c if is_digit(c) => self.parse_number(),
             c if is_letter(c) => self.parse_identifier(),
             _ => todo!(),
-        }
+        };
+
+        self.current_token = token.clone();
+        token
     }
 
     /**
@@ -348,32 +378,28 @@ impl Lexer {
 
 #[test]
 fn test_parse_long_string() {
-    let mut lexer = Lexer {
-        stream: ChunkStream {
-            chunk_name: String::from("test.lua"),
-            chunk: String::from("[[line 1\nline 2]]").chars().collect(),
-            line: 1,
-            column: 0,
-            index: 0,
-        },
-    };
+    let mut lexer = Lexer::new(ChunkStream {
+        chunk_name: String::from("test.lua"),
+        chunk: String::from("[[line 1\nline 2]]").chars().collect(),
+        line: 1,
+        column: 0,
+        index: 0,
+    });
 
     assert_eq!(lexer.next_token(), Token::string_token("line 1\nline 2"));
 }
 
 #[test]
 fn test_parse_short_string() {
-    let mut lexer = Lexer {
-        stream: ChunkStream {
-            chunk_name: String::from("test.lua"),
-            chunk: String::from("'short string'\n\"long string\"")
-                .chars()
-                .collect(),
-            line: 1,
-            column: 0,
-            index: 0,
-        },
-    };
+    let mut lexer = Lexer::new(ChunkStream {
+        chunk_name: String::from("test.lua"),
+        chunk: String::from("'short string'\n\"long string\"")
+            .chars()
+            .collect(),
+        line: 1,
+        column: 0,
+        index: 0,
+    });
 
     assert_eq!(lexer.next_token(), Token::string_token("short string"));
     assert_eq!(lexer.next_token(), Token::string_token("long string"));
@@ -381,15 +407,13 @@ fn test_parse_short_string() {
 
 #[test]
 fn test_parse_oparetor() {
-    let mut lexer = Lexer {
-        stream: ChunkStream {
-            chunk_name: String::from("test.lua"),
-            chunk: String::from("+-*/^%&|#~~=>=>>><=<<<").chars().collect(),
-            line: 1,
-            column: 0,
-            index: 0,
-        },
-    };
+    let mut lexer = Lexer::new(ChunkStream {
+        chunk_name: String::from("test.lua"),
+        chunk: String::from("+-*/^%&|#~~=>=>>><=<<<").chars().collect(),
+        line: 1,
+        column: 0,
+        index: 0,
+    });
 
     assert_eq!(lexer.next_token(), Token::plus_token());
     assert_eq!(lexer.next_token(), Token::minus_token());
@@ -412,17 +436,15 @@ fn test_parse_oparetor() {
 
 #[test]
 fn test_parse_digit() {
-    let mut lexer = Lexer {
-        stream: ChunkStream {
-            chunk_name: String::from("test.lua"),
-            chunk: String::from("0 3 345 0xff 0xBEBADA 3.0 3.1416")
-                .chars()
-                .collect(),
-            line: 1,
-            column: 0,
-            index: 0,
-        },
-    };
+    let mut lexer = Lexer::new(ChunkStream {
+        chunk_name: String::from("test.lua"),
+        chunk: String::from("0 3 345 0xff 0xBEBADA 3.0 3.1416")
+            .chars()
+            .collect(),
+        line: 1,
+        column: 0,
+        index: 0,
+    });
 
     assert_eq!(lexer.next_token(), Token::number_token("0"));
     assert_eq!(lexer.next_token(), Token::number_token("3"));
@@ -435,17 +457,15 @@ fn test_parse_digit() {
 
 #[test]
 fn test_parse_identifier() {
-    let mut lexer = Lexer {
-        stream: ChunkStream {
-            chunk_name: String::from("test.lua"),
-            chunk: String::from("if true then else end function() end")
-                .chars()
-                .collect(),
-            line: 1,
-            column: 0,
-            index: 0,
-        },
-    };
+    let mut lexer = Lexer::new(ChunkStream {
+        chunk_name: String::from("test.lua"),
+        chunk: String::from("if true then else end function() end")
+            .chars()
+            .collect(),
+        line: 1,
+        column: 0,
+        index: 0,
+    });
 
     assert_eq!(lexer.next_token(), Token::if_token());
     assert_eq!(lexer.next_token(), Token::true_token());

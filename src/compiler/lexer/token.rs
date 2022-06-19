@@ -1,13 +1,11 @@
-use std::collections::HashMap;
-
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 pub(crate) struct Token {
-    kind: TokenType,
-    value: String,
+    pub kind: TokenType,
+    pub value: String,
 }
 
-#[derive(PartialEq, Debug)]
-enum TokenType {
+#[derive(PartialEq, Debug, Copy, Clone)]
+pub(crate) enum TokenType {
     Eof,
     Vararg,
     SeparatorSemicolon,
@@ -38,7 +36,7 @@ enum TokenType {
     OperatorConcat,
     OperatorLt,
     OperatorLe,
-    OperatorGl,
+    OperatorGt,
     OperatorGe,
     OperatorEq,
     OperatorAnd,
@@ -67,10 +65,21 @@ enum TokenType {
     Identifier,
     Number,
     String,
-    // OperatorUnary,
-    // OperatorSub,
-    // OperatorBxor,
+    OperatorUnm,
+    OperatorSub,
+    OperatorBxor,
+    OperatorBnot,
 }
+
+// impl Copy for Token {
+//     fn clone(&self) -> Token {
+//         // *self
+//         Token {
+//             kind: self.kind,
+//             value: self.value.to_string(),
+//         }
+//     }
+// }
 
 impl Token {
     pub fn eof_token() -> Token {
