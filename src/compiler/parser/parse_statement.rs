@@ -12,7 +12,7 @@ use crate::compiler::{
             LocalVarDeclareStatement, RepeatStatement, Statement, WhileStatement,
         },
     },
-    lexer::{lexer::Lexer, token::TokenType},
+    lexer::{lexer::Lexer, token::TokenType, chunk_stream::ChunkStream},
     parser::{
         parse_expression::{
             parse_expression, parse_expression_list, parse_function_defined_expression,
@@ -262,4 +262,23 @@ fn parse_var_list(lexer: &mut Lexer) -> Vec<Box<dyn Expression>> {
         var_list.push(exp);
     }
     var_list
+}
+
+
+#[test]
+fn test_parse_simple_while_statement() {
+
+      let stmt = parse_statement(
+        &mut Lexer::new(ChunkStream::new("test.lua", "while true do break; end"))
+      );
+      print!("statement {:?}", stmt)
+}
+
+#[test]
+fn test_parse_simple_if_statement() {
+
+      let stmt = parse_statement(
+        &mut Lexer::new(ChunkStream::new("test.lua", "if true then break; else break; end"))
+      );
+      print!("statement {:?}", stmt)
 }
