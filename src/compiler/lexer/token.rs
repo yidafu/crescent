@@ -280,7 +280,7 @@ impl Token {
 
     pub fn gt_token() -> Token {
         Token {
-            kind: TokenType::OperatorGl,
+            kind: TokenType::OperatorGt,
             value: String::from(">"),
         }
     }

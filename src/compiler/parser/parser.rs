@@ -8,11 +8,11 @@ use super::super::lexer::token::Token;
 use super::parse_expression::parse_expression_list;
 use super::parse_statement::parse_statement;
 
-pub(crate) fn parse_block(lexer: &mut Lexer) -> Block {
-    Block {
+pub(crate) fn parse_block(lexer: &mut Lexer) -> Box<Block> {
+    Box::new(Block {
         statements: parse_statements(lexer),
         return_expression: parse_return_expression(lexer),
-    }
+    })
 }
 
 fn parse_statements(lexer: &mut Lexer) -> Vec<Box<dyn Statement>> {
@@ -30,7 +30,7 @@ fn parse_statements(lexer: &mut Lexer) -> Vec<Box<dyn Statement>> {
 fn parse_return_expression(lexer: &mut Lexer) -> Vec<Box<dyn Expression>> {
     let expressions = Vec::new();
     let token = lexer.peek_token();
-    if (token.kind != TokenType::KeywrodReturn) {
+    if token.kind != TokenType::KeywrodReturn {
         return expressions;
     }
 
@@ -48,8 +48,6 @@ fn parse_return_expression(lexer: &mut Lexer) -> Vec<Box<dyn Expression>> {
             exps
         }
     }
-
-    expressions
 }
 
 fn is_return_or_block_end(token: Token) -> bool {

@@ -28,7 +28,7 @@ impl Lexer {
     pub fn next_special_token(&mut self, kind: TokenType) -> Token {
         let token = self.next_token();
         if token.kind != kind {
-            panic!("Expect token {}, but got {:?}", kind, token)
+            panic!("Expect token {:?}, but got {:?}", kind, token)
         }
         token
     }
