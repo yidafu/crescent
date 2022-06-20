@@ -1,76 +1,94 @@
+use std::fmt::Debug;
+
 use super::{
     block::Block,
     expression::{Expression, FunctionDefinedExpression},
 };
 
-pub(crate) trait Statement {}
+pub(crate) trait Statement : Debug {}
 
+#[derive(Debug)]
 pub(crate) struct EmptyStatement {}
 
 impl Statement for EmptyStatement {}
 
+#[derive(Debug)]
 pub(crate) struct BreakStatement {}
 
 impl Statement for BreakStatement {}
 
+#[derive(Debug)]
 pub(crate) struct LabelStatement {
-    name: String,
+    pub(crate) name: String,
 }
 
 impl Statement for LabelStatement {}
 
+#[derive(Debug)]
 pub(crate) struct GotoStatement {
-    name: String,
+    pub(crate) name: String,
 }
 
 impl Statement for GotoStatement {}
 
+#[derive(Debug)]
 pub(crate) struct DotStatement {}
 
 impl Statement for DotStatement {}
 
+#[derive(Debug)]
 pub(crate) struct WhileStatement {
-    condition: Box<dyn Expression>,
-    block: Block,
+    pub(crate) condition: Box<dyn Expression>,
+    pub(crate) block: Box<Block>,
 }
 
 impl Statement for WhileStatement {}
 
+#[derive(Debug)]
 pub(crate) struct RepeatStatement {
-    condition: Box<dyn Expression>,
-    block: Block,
+    pub(crate) condition: Box<dyn Expression>,
+    pub(crate) block: Box<Block>,
 }
 
 impl Statement for RepeatStatement {}
 
+#[derive(Debug)]
 pub(crate) struct IfStatement {
     pub(crate) condition: Box<dyn Expression>,
-    then_block: Box<Block>,
-    pub(crate) else_block: IfStatement,
+    pub(crate) then_block: Box<Block>,
+    pub(crate) else_block: Box<dyn Statement>,
 }
 
 impl Statement for IfStatement {}
 
+#[derive(Debug)]
 pub(crate) struct ForStatement {
-    initial: Box<dyn Expression>,
-    condition: Box<dyn Expression>,
-    increment: Box<dyn Expression>,
-    block: Block,
+    pub(crate) initial: Box<dyn Expression>,
+    pub(crate) condition: Box<dyn Expression>,
+    pub(crate) increment: Box<dyn Expression>,
+    pub(crate) block: Block,
 }
 
 impl Statement for ForStatement {}
 
+#[derive(Debug)]
 pub(crate) struct LocalVarDeclareStatement {
-    name_list: Vec<String>,
-    exp_list: Vec<Box<dyn Expression>>,
+    pub(crate) name_list: Vec<String>,
+    pub(crate) exp_list: Vec<Box<dyn Expression>>,
 }
 
+impl Statement for LocalVarDeclareStatement {}
+
+#[derive(Debug)]
 pub(crate) struct AssignStatement {
-    var_list: Vec<Box<dyn Expression>>,
-    exp_list: Vec<Box<dyn Expression>>,
+    pub(crate) var_list: Vec<Box<dyn Expression>>,
+    pub(crate) exp_list: Vec<Box<dyn Expression>>,
 }
+impl Statement for AssignStatement {}
 
+#[derive(Debug)]
 pub(crate) struct LocalFunctionDefinedStatement {
-    name: String,
-    exp: FunctionDefinedExpression,
+    pub(crate) name: String,
+    pub(crate) exp: Box<FunctionDefinedExpression>,
 }
+impl Statement for LocalFunctionDefinedStatement {}

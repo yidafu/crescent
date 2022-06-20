@@ -1,16 +1,12 @@
 use crate::compiler::{
-    ast::{expression::*, statement::*},
-    lexer::{
-        chunk_stream::ChunkStream,
-        lexer::Lexer,
-        token::{Token, TokenType},
-    },
+    ast::expression::*,
+    lexer::{chunk_stream::ChunkStream, lexer::Lexer, token::TokenType},
 };
 
 use super::parser::parse_block;
 
 pub(crate) fn parse_expression_list(lexer: &mut Lexer) -> Vec<Box<dyn Expression>> {
-    let exp_list: Vec<Box<dyn Expression>> = Vec::new();
+    let mut exp_list: Vec<Box<dyn Expression>> = Vec::new();
 
     while lexer.peek_token().kind == TokenType::SeparetorComma {
         lexer.next_token(); // eat ,
@@ -26,7 +22,8 @@ pub(crate) fn parse_expression(lexer: &mut Lexer) -> Box<dyn Expression> {
 fn parse_expression_12(lexer: &mut Lexer) -> Box<dyn Expression> {
     let mut exp_l = parse_expression_11(lexer);
     while lexer.peek_token().kind == TokenType::OperatorOr {
-        let operator = lexer.next_token();
+        let operator = lexer.peek_token();
+        lexer.next_token();
         exp_l = Box::new(BinaryExpression {
             exp_l,
             exp_r: parse_expression_11(lexer),
@@ -39,7 +36,8 @@ fn parse_expression_12(lexer: &mut Lexer) -> Box<dyn Expression> {
 fn parse_expression_11(lexer: &mut Lexer) -> Box<dyn Expression> {
     let mut exp_l = parse_expression_10(lexer);
     while lexer.peek_token().kind == TokenType::OperatorAnd {
-        let operator = lexer.next_token();
+        let operator = lexer.peek_token();
+        lexer.next_token();
         exp_l = Box::new(BinaryExpression {
             exp_l,
             exp_r: parse_expression_10(lexer),
@@ -59,7 +57,8 @@ fn parse_expression_10(lexer: &mut Lexer) -> Box<dyn Expression> {
         || lexer.peek_token().kind == TokenType::OperatorNotEqual
         || lexer.peek_token().kind == TokenType::OperatorEq
     {
-        let operator = lexer.next_token();
+        let operator = lexer.peek_token();
+        lexer.next_token();
         exp_l = Box::new(BinaryExpression {
             exp_l,
             exp_r: parse_expression_9(lexer),
@@ -72,7 +71,8 @@ fn parse_expression_10(lexer: &mut Lexer) -> Box<dyn Expression> {
 fn parse_expression_9(lexer: &mut Lexer) -> Box<dyn Expression> {
     let mut exp_l = parse_expression_8(lexer);
     while lexer.peek_token().kind == TokenType::OperatorBor {
-        let operator = lexer.next_token();
+        let operator = lexer.peek_token();
+        lexer.next_token();
         exp_l = Box::new(BinaryExpression {
             exp_l,
             exp_r: parse_expression_8(lexer),
@@ -85,7 +85,8 @@ fn parse_expression_9(lexer: &mut Lexer) -> Box<dyn Expression> {
 fn parse_expression_8(lexer: &mut Lexer) -> Box<dyn Expression> {
     let mut exp_l = parse_expression_7(lexer);
     while lexer.peek_token().kind == TokenType::OperatorWave {
-        let operator = lexer.next_token();
+        let operator = lexer.peek_token();
+        lexer.next_token();
         exp_l = Box::new(BinaryExpression {
             exp_l,
             exp_r: parse_expression_7(lexer),
@@ -98,7 +99,8 @@ fn parse_expression_8(lexer: &mut Lexer) -> Box<dyn Expression> {
 fn parse_expression_7(lexer: &mut Lexer) -> Box<dyn Expression> {
     let mut exp_l = parse_expression_6(lexer);
     while lexer.peek_token().kind == TokenType::OperatorBand {
-        let operator = lexer.next_token();
+        let operator = lexer.peek_token();
+        lexer.next_token();
         exp_l = Box::new(BinaryExpression {
             exp_l,
             exp_r: parse_expression_6(lexer),
@@ -113,7 +115,8 @@ fn parse_expression_6(lexer: &mut Lexer) -> Box<dyn Expression> {
     while lexer.peek_token().kind == TokenType::OperatorShl
         || lexer.peek_token().kind == TokenType::OperatorShr
     {
-        let operator = lexer.next_token();
+        let operator = lexer.peek_token();
+        lexer.next_token();
         exp_l = Box::new(BinaryExpression {
             exp_l,
             exp_r: parse_expression_5(lexer),
@@ -124,13 +127,13 @@ fn parse_expression_6(lexer: &mut Lexer) -> Box<dyn Expression> {
 }
 
 fn parse_expression_5(lexer: &mut Lexer) -> Box<dyn Expression> {
-    let exp = parse_expression_4(lexer);
+    let mut exp = parse_expression_4(lexer);
 
     if lexer.peek_token().kind != TokenType::OperatorConcat {
         return exp;
     }
 
-    let exps = Vec::new();
+    let mut exps = Vec::new();
     while lexer.peek_token().kind == TokenType::OperatorConcat {
         lexer.next_token();
         exps.push(parse_expression_4(lexer));
@@ -144,7 +147,8 @@ fn parse_expression_4(lexer: &mut Lexer) -> Box<dyn Expression> {
     while lexer.peek_token().kind == TokenType::OperatorPlus
         || lexer.peek_token().kind == TokenType::OperatorMinus
     {
-        let operator = lexer.next_token();
+        let operator = lexer.peek_token();
+        lexer.next_token();
         exp_l = Box::new(BinaryExpression {
             exp_l,
             exp_r: parse_expression_3(lexer),
@@ -161,7 +165,8 @@ fn parse_expression_3(lexer: &mut Lexer) -> Box<dyn Expression> {
         || lexer.peek_token().kind == TokenType::OperatorMod
         || lexer.peek_token().kind == TokenType::OperatorIDivide
     {
-        let operator = lexer.next_token();
+        let operator = lexer.peek_token();
+        lexer.next_token();
         exp_l = Box::new(BinaryExpression {
             exp_l,
             exp_r: parse_expression_2(lexer),
@@ -178,7 +183,8 @@ fn parse_expression_2(lexer: &mut Lexer) -> Box<dyn Expression> {
         | TokenType::OperatorLen
         | TokenType::OperatorBnot
         | TokenType::OperatorUnm => {
-            let operator = lexer.next_token();
+            let operator = lexer.peek_token();
+            lexer.next_token();
             Box::new(UnaryExpression {
                 operator: operator.value,
                 exp: parse_expression_2(lexer),
@@ -189,9 +195,10 @@ fn parse_expression_2(lexer: &mut Lexer) -> Box<dyn Expression> {
 }
 
 fn parse_expression_1(lexer: &mut Lexer) -> Box<dyn Expression> {
-    let exp_l = parse_expression_0(lexer);
+    let mut exp_l = parse_expression_0(lexer);
     if lexer.peek_token().kind == TokenType::OperatorPow {
-        let operator = lexer.next_token();
+        let operator = lexer.peek_token();
+        lexer.next_token();
         exp_l = Box::new(BinaryExpression {
             operator: operator.value,
             exp_l,
@@ -233,14 +240,16 @@ fn parse_expression_0(lexer: &mut Lexer) -> Box<dyn Expression> {
 }
 
 fn parse_number_expression(lexer: &mut Lexer) -> Box<dyn Expression> {
-    let token = lexer.next_token();
+    let token = lexer.peek_token();
     if token.value.contains('.') {
-        Box::new(IntegerExpression {
-            value: token.value.parse::<i64>().unwrap(),
-        })
-    } else {
+        lexer.next_token();
         Box::new(FloatExpression {
             value: token.value.parse::<f64>().unwrap(),
+        })
+    } else {
+        lexer.next_token();
+        Box::new(IntegerExpression {
+            value: token.value.parse::<i64>().unwrap(),
         })
     }
 }
@@ -270,7 +279,7 @@ fn parse_param_list(lexer: &mut Lexer) -> Vec<String> {
             Vec::new()
         }
         _ => {
-            let name_list = Vec::new();
+            let mut name_list = Vec::new();
             name_list.push(lexer.next_identifier_token().value);
             while lexer.peek_token().kind == TokenType::SeparetorComma {
                 lexer.next_token();
@@ -296,7 +305,10 @@ pub(crate) fn parse_prefix_expression(lexer: &mut Lexer) -> Box<dyn Expression> 
     }
 }
 
-fn _parse_prefix_expression(lexer: &mut Lexer, exp: Box<dyn Expression>) -> Box<dyn Expression> {
+fn _parse_prefix_expression(
+    lexer: &mut Lexer,
+    mut exp: Box<dyn Expression>,
+) -> Box<dyn Expression> {
     loop {
         exp = match lexer.peek_token().kind {
             TokenType::SeparatorOpenBracket => {
@@ -391,7 +403,7 @@ fn parse_args(lexer: &mut Lexer) -> Vec<Box<dyn Expression>> {
 
 #[test]
 fn test_simple_expression() {
-    let exp = parse_expression(&mut Lexer::new(ChunkStream::new("test.lua", "1 + 2 + 3")));
+    let exp = parse_expression(&mut Lexer::new(ChunkStream::new("test.lua", "1 + 2 * 3")));
 
-    // print!("expression {:?}", exp)
+    print!("expression {:?}", exp)
 }
