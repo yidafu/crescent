@@ -1,53 +1,86 @@
-use std::fmt::{Debug, Formatter, Error};
+use std::fmt::Debug;
 
 use super::block::Block;
 
+#[derive(Debug)]
 pub(crate) enum Expression {
-
+    EmptyExpression,
+    NilExpression,
+    TrueExpression,
+    FalseExpression,
+    VarargExpression,
+    IntegerExpression(i64),
+    FloatExpresion(f64),
+    StringExpression(String),
+    NameString(String),
+    UnaryExpression(UnaryExpression),
+    BinaryExpression(BinaryExpression),
+    ConcatExpression(ConcatExpression),
+    TableConstructorExpression(TableConstructorExpression),
+    FunctionDefinedExpression(FunctionDefinedExpression),
+    ParenthesisExpression(ParenthesisExpression),
+    TableAccessExpression(TableAccessExpression),
+    FunctionCallExpression(FunctionCallExpression),
 }
-#[derive(Debug)]
-pub(crate) struct EmptyExpression {}
-impl EmptyExpression {}
 
-#[derive(Debug)]
-pub(crate) struct NilExpression {}
-impl NilExpression {}
+impl Expression {
+    #[inline]
+    pub fn unary_expression(operator: String, exp: Expression) -> Expression {
+        Expression::UnaryExpression(UnaryExpression {
+            operator,
+            exp: Box::new(exp),
+        })
+    }
 
-#[derive(Debug)]
-pub(crate) struct TrueExpression {}
-impl TrueExpression {}
+    pub fn binary_expression(operator: String, exp_l: Expression, exp_r: Expression) -> Expression {
+        Expression::BinaryExpression(BinaryExpression {
+            operator,
+            exp_l: Box::new(exp_l),
+            exp_r: Box::new(exp_r),
+        })
+    }
 
+    pub fn concat_expresion(exps: Vec<Expression>) -> Expression {
+        Expression::ConcatExpression(ConcatExpression { exps })
+    }
 
-#[derive(Debug)]
-pub(crate) struct FalseExpression {}
-impl FalseExpression {}
+    pub fn function_defined_expression(
+        param_list: Vec<String>,
+        is_vararg: bool,
+        block: Block,
+    ) -> Expression {
+        Expression::FunctionDefinedExpression(FunctionDefinedExpression {
+            param_list,
+            is_vararg,
+            block,
+        })
+    }
 
-#[derive(Debug)]
-pub(crate) struct VarargExpression {}
-impl VarargExpression {}
+    pub fn function_call_expression(
+        prefix_exp: Expression,
+        name_exp: Expression,
+        args: Vec<Expression>,
+    ) -> Expression {
+        Expression::FunctionCallExpression(FunctionCallExpression {
+            prefix_exp: Box::new(prefix_exp),
+            name_exp: Box::new(name_exp),
+            args,
+        })
+    }
+    pub fn parenthesis_expression(exp: Expression) -> Expression{
+        Expression::ParenthesisExpression(ParenthesisExpression { exp: Box::new(exp) })
+    }
+    pub fn table_access_expression(prefix_exp: Expression, key_exp: Expression) -> Expression {
+        Expression::TableAccessExpression(TableAccessExpression {
+            prefix_exp: Box::new(prefix_exp),
+            key_exp: Box::new(key_exp),
+        })
+    }
 
-#[derive(Debug)]
-pub(crate) struct IntegerExpression {
-    pub(crate) value: i64,
+    pub fn table_constructor_expression(key_exp: Vec<Expression>, value_exp: Vec<Expression>) -> Expression {
+        Expression::TableConstructorExpression( TableConstructorExpression { key_exp, value_exp })
+    }
 }
-impl IntegerExpression {}
-
-#[derive(Debug)]
-pub(crate) struct FloatExpression {
-    pub(crate) value: f64,
-}
-impl FloatExpression {}
-
-#[derive(Debug)]
-pub(crate) struct StringExpression {
-    pub(crate) value: String,
-}
-impl StringExpression {}
-#[derive(Debug)]
-pub(crate) struct NameExpression {
-    pub(crate) name: String,
-}
-impl NameExpression {}
 
 #[derive(Debug)]
 pub(crate) struct UnaryExpression {
@@ -66,22 +99,22 @@ impl BinaryExpression {}
 
 #[derive(Debug)]
 pub(crate) struct ConcatExpression {
-    pub(crate) exps: Vec<Box<Expression>>,
+    pub(crate) exps: Vec<Expression>,
 }
 impl ConcatExpression {}
 
 #[derive(Debug)]
-pub(crate) struct TableContructorExpression {
-    pub(crate) key_exp: Vec<Box<Expression>>,
-    pub(crate) value_exp: Vec<Box<Expression>>,
+pub(crate) struct TableConstructorExpression {
+    pub(crate) key_exp: Vec<Expression>,
+    pub(crate) value_exp: Vec<Expression>,
 }
-impl TableContructorExpression {}
+impl TableConstructorExpression {}
 
 #[derive(Debug)]
 pub(crate) struct FunctionDefinedExpression {
     pub(crate) param_list: Vec<String>,
     pub(crate) is_vararg: bool,
-    pub(crate) block: Box<Block>,
+    pub(crate) block: Block,
 }
 
 impl FunctionDefinedExpression {}
@@ -102,7 +135,7 @@ impl TableAccessExpression {}
 #[derive(Debug)]
 pub(crate) struct FunctionCallExpression {
     pub(crate) prefix_exp: Box<Expression>,
-    pub(crate) name_exp: Box<StringExpression>,
-    pub(crate) args: Vec<Box<Expression>>,
+    pub(crate) name_exp: Box<Expression>,
+    pub(crate) args: Vec<Expression>,
 }
 impl FunctionCallExpression {}

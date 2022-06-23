@@ -5,8 +5,8 @@ use crate::compiler::{
 
 use super::parser::parse_block;
 
-pub(crate) fn parse_expression_list(lexer: &mut Lexer) -> Vec<Box<dyn Expression>> {
-    let mut exp_list: Vec<Box<dyn Expression>> = Vec::new();
+pub(crate) fn parse_expression_list(lexer: &mut Lexer) -> Vec<Expression> {
+    let mut exp_list: Vec<Expression> = Vec::new();
 
     while lexer.peek_token().kind == TokenType::SeparetorComma {
         lexer.next_token(); // eat ,
@@ -15,39 +15,31 @@ pub(crate) fn parse_expression_list(lexer: &mut Lexer) -> Vec<Box<dyn Expression
     exp_list
 }
 
-pub(crate) fn parse_expression(lexer: &mut Lexer) -> Box<dyn Expression> {
+pub(crate) fn parse_expression(lexer: &mut Lexer) -> Expression {
     parse_expression_12(lexer)
 }
 
-fn parse_expression_12(lexer: &mut Lexer) -> Box<dyn Expression> {
+fn parse_expression_12(lexer: &mut Lexer) -> Expression {
     let mut exp_l = parse_expression_11(lexer);
     while lexer.peek_token().kind == TokenType::OperatorOr {
         let operator = lexer.peek_token();
         lexer.next_token();
-        exp_l = Box::new(BinaryExpression {
-            exp_l,
-            exp_r: parse_expression_11(lexer),
-            operator: operator.value,
-        })
+        exp_l = Expression::binary_expression(operator.value, exp_l, parse_expression_11(lexer))
     }
     exp_l
 }
 
-fn parse_expression_11(lexer: &mut Lexer) -> Box<dyn Expression> {
+fn parse_expression_11(lexer: &mut Lexer) -> Expression {
     let mut exp_l = parse_expression_10(lexer);
     while lexer.peek_token().kind == TokenType::OperatorAnd {
         let operator = lexer.peek_token();
         lexer.next_token();
-        exp_l = Box::new(BinaryExpression {
-            exp_l,
-            exp_r: parse_expression_10(lexer),
-            operator: operator.value,
-        })
+        exp_l = Expression::binary_expression(operator.value, exp_l, parse_expression_10(lexer))
     }
     exp_l
 }
 
-fn parse_expression_10(lexer: &mut Lexer) -> Box<dyn Expression> {
+fn parse_expression_10(lexer: &mut Lexer) -> Expression {
     let mut exp_l = parse_expression_9(lexer);
     while lexer.peek_token().kind == TokenType::OperatorGt
         || lexer.peek_token().kind == TokenType::OperatorLt
@@ -59,74 +51,54 @@ fn parse_expression_10(lexer: &mut Lexer) -> Box<dyn Expression> {
     {
         let operator = lexer.peek_token();
         lexer.next_token();
-        exp_l = Box::new(BinaryExpression {
-            exp_l,
-            exp_r: parse_expression_9(lexer),
-            operator: operator.value,
-        })
+        exp_l = Expression::binary_expression(operator.value, exp_l, parse_expression_9(lexer))
     }
     exp_l
 }
 
-fn parse_expression_9(lexer: &mut Lexer) -> Box<dyn Expression> {
+fn parse_expression_9(lexer: &mut Lexer) -> Expression {
     let mut exp_l = parse_expression_8(lexer);
     while lexer.peek_token().kind == TokenType::OperatorBor {
         let operator = lexer.peek_token();
         lexer.next_token();
-        exp_l = Box::new(BinaryExpression {
-            exp_l,
-            exp_r: parse_expression_8(lexer),
-            operator: operator.value,
-        })
+        exp_l = Expression::binary_expression(operator.value, exp_l, parse_expression_8(lexer))
     }
     exp_l
 }
 
-fn parse_expression_8(lexer: &mut Lexer) -> Box<dyn Expression> {
+fn parse_expression_8(lexer: &mut Lexer) -> Expression {
     let mut exp_l = parse_expression_7(lexer);
     while lexer.peek_token().kind == TokenType::OperatorWave {
         let operator = lexer.peek_token();
         lexer.next_token();
-        exp_l = Box::new(BinaryExpression {
-            exp_l,
-            exp_r: parse_expression_7(lexer),
-            operator: operator.value,
-        })
+        exp_l = Expression::binary_expression(operator.value, exp_l, parse_expression_7(lexer))
     }
     exp_l
 }
 
-fn parse_expression_7(lexer: &mut Lexer) -> Box<dyn Expression> {
+fn parse_expression_7(lexer: &mut Lexer) -> Expression {
     let mut exp_l = parse_expression_6(lexer);
     while lexer.peek_token().kind == TokenType::OperatorBand {
         let operator = lexer.peek_token();
         lexer.next_token();
-        exp_l = Box::new(BinaryExpression {
-            exp_l,
-            exp_r: parse_expression_6(lexer),
-            operator: operator.value,
-        })
+        exp_l = Expression::binary_expression(operator.value, exp_l, parse_expression_6(lexer))
     }
     exp_l
 }
 
-fn parse_expression_6(lexer: &mut Lexer) -> Box<dyn Expression> {
+fn parse_expression_6(lexer: &mut Lexer) -> Expression {
     let mut exp_l = parse_expression_5(lexer);
     while lexer.peek_token().kind == TokenType::OperatorShl
         || lexer.peek_token().kind == TokenType::OperatorShr
     {
         let operator = lexer.peek_token();
         lexer.next_token();
-        exp_l = Box::new(BinaryExpression {
-            exp_l,
-            exp_r: parse_expression_5(lexer),
-            operator: operator.value,
-        })
+        exp_l = Expression::binary_expression(operator.value, exp_l, parse_expression_5(lexer))
     }
     exp_l
 }
 
-fn parse_expression_5(lexer: &mut Lexer) -> Box<dyn Expression> {
+fn parse_expression_5(lexer: &mut Lexer) -> Expression {
     let mut exp = parse_expression_4(lexer);
 
     if lexer.peek_token().kind != TokenType::OperatorConcat {
@@ -139,26 +111,22 @@ fn parse_expression_5(lexer: &mut Lexer) -> Box<dyn Expression> {
         exps.push(parse_expression_4(lexer));
     }
 
-    Box::new(ConcatExpression { exps })
+    Expression::concat_expresion(exps)
 }
 
-fn parse_expression_4(lexer: &mut Lexer) -> Box<dyn Expression> {
+fn parse_expression_4(lexer: &mut Lexer) -> Expression {
     let mut exp_l = parse_expression_3(lexer);
     while lexer.peek_token().kind == TokenType::OperatorPlus
         || lexer.peek_token().kind == TokenType::OperatorMinus
     {
         let operator = lexer.peek_token();
         lexer.next_token();
-        exp_l = Box::new(BinaryExpression {
-            exp_l,
-            exp_r: parse_expression_3(lexer),
-            operator: operator.value,
-        })
+        exp_l = Expression::binary_expression(operator.value, exp_l, parse_expression_3(lexer))
     }
     exp_l
 }
 
-fn parse_expression_3(lexer: &mut Lexer) -> Box<dyn Expression> {
+fn parse_expression_3(lexer: &mut Lexer) -> Expression {
     let mut exp_l = parse_expression_2(lexer);
     while lexer.peek_token().kind == TokenType::OperatorMultiply
         || lexer.peek_token().kind == TokenType::OperatorDivide
@@ -167,16 +135,12 @@ fn parse_expression_3(lexer: &mut Lexer) -> Box<dyn Expression> {
     {
         let operator = lexer.peek_token();
         lexer.next_token();
-        exp_l = Box::new(BinaryExpression {
-            exp_l,
-            exp_r: parse_expression_2(lexer),
-            operator: operator.value,
-        })
+        exp_l = Expression::binary_expression(operator.value, exp_l, parse_expression_2(lexer))
     }
     exp_l
 }
 
-fn parse_expression_2(lexer: &mut Lexer) -> Box<dyn Expression> {
+fn parse_expression_2(lexer: &mut Lexer) -> Expression {
     match lexer.peek_token().kind {
         TokenType::OperatorLen
         | TokenType::OperatorNot
@@ -185,50 +149,43 @@ fn parse_expression_2(lexer: &mut Lexer) -> Box<dyn Expression> {
         | TokenType::OperatorUnm => {
             let operator = lexer.peek_token();
             lexer.next_token();
-            Box::new(UnaryExpression {
-                operator: operator.value,
-                exp: parse_expression_2(lexer),
-            })
+            Expression::unary_expression(operator.value, parse_expression_2(lexer))
         }
         _ => parse_expression_1(lexer),
     }
 }
 
-fn parse_expression_1(lexer: &mut Lexer) -> Box<dyn Expression> {
+fn parse_expression_1(lexer: &mut Lexer) -> Expression {
     let mut exp_l = parse_expression_0(lexer);
     if lexer.peek_token().kind == TokenType::OperatorPow {
         let operator = lexer.peek_token();
         lexer.next_token();
-        exp_l = Box::new(BinaryExpression {
-            operator: operator.value,
-            exp_l,
-            exp_r: parse_expression_2(lexer),
-        })
+        exp_l = Expression::binary_expression(operator.value, exp_l, parse_expression_0(lexer))
     }
     exp_l
 }
 
-fn parse_expression_0(lexer: &mut Lexer) -> Box<dyn Expression> {
+fn parse_expression_0(lexer: &mut Lexer) -> Expression {
     match lexer.peek_token().kind {
         TokenType::Vararg => {
             lexer.next_token();
-            Box::new(VarargExpression {})
+            Expression::VarargExpression
         }
         TokenType::KeywrodNil => {
             lexer.next_token();
-            Box::new(NilExpression {})
+            Expression::NilExpression
         }
         TokenType::KeywrodTrue => {
             lexer.next_token();
-            Box::new(TrueExpression {})
+            Expression::TrueExpression
         }
         TokenType::KeywrodFalse => {
             lexer.next_token();
-            Box::new(FalseExpression {})
+            Expression::FalseExpression
         }
         TokenType::String => {
             let token = lexer.next_token();
-            Box::new(StringExpression { value: token.value })
+            Expression::StringExpression( token.value )
         }
         TokenType::Number => parse_number_expression(lexer),
         TokenType::KeywrodFunction => {
@@ -239,36 +196,27 @@ fn parse_expression_0(lexer: &mut Lexer) -> Box<dyn Expression> {
     }
 }
 
-fn parse_number_expression(lexer: &mut Lexer) -> Box<dyn Expression> {
+fn parse_number_expression(lexer: &mut Lexer) -> Expression {
     let token = lexer.peek_token();
     if token.value.contains('.') {
         lexer.next_token();
-        Box::new(FloatExpression {
-            value: token.value.parse::<f64>().unwrap(),
-        })
+        Expression::FloatExpresion( token.value.parse::<f64>().unwrap())
     } else {
         lexer.next_token();
-        Box::new(IntegerExpression {
-            value: token.value.parse::<i64>().unwrap(),
-        })
+        Expression::IntegerExpression( token.value.parse::<i64>().unwrap())
     }
 }
 
 pub(crate) fn parse_function_defined_expression(
     lexer: &mut Lexer,
-) -> Box<FunctionDefinedExpression> {
+) -> Expression {
     lexer.next_special_token(TokenType::SeparatorOpenParenthesis);
     let param_list = parse_param_list(lexer);
     lexer.next_special_token(TokenType::SeparatorCloseParenthesis);
 
     let block = parse_block(lexer);
     lexer.next_special_token(TokenType::KeywrodEnd);
-
-    Box::new(FunctionDefinedExpression {
-        param_list,
-        is_vararg: false,
-        block,
-    })
+    Expression::function_defined_expression(param_list, false, block)
 }
 
 fn parse_param_list(lexer: &mut Lexer) -> Vec<String> {
@@ -294,40 +242,30 @@ fn parse_param_list(lexer: &mut Lexer) -> Vec<String> {
     }
 }
 
-pub(crate) fn parse_prefix_expression(lexer: &mut Lexer) -> Box<dyn Expression> {
+pub(crate) fn parse_prefix_expression(lexer: &mut Lexer) -> Expression {
     if lexer.peek_token().kind == TokenType::Identifier {
-        Box::new(NameExpression {
-            name: lexer.next_identifier_token().value,
-        })
+        Expression::NameString(lexer.next_identifier_token().value)
     } else {
         let exp = parse_parenthesis_expression(lexer);
         _parse_prefix_expression(lexer, exp)
     }
 }
 
-fn _parse_prefix_expression(
-    lexer: &mut Lexer,
-    mut exp: Box<dyn Expression>,
-) -> Box<dyn Expression> {
+fn _parse_prefix_expression(lexer: &mut Lexer, mut exp: Expression) -> Expression {
     loop {
         exp = match lexer.peek_token().kind {
             TokenType::SeparatorOpenBracket => {
                 lexer.next_token();
                 let key_exp = parse_expression(lexer);
                 lexer.next_special_token(TokenType::SeparatorCloseBracket);
-                Box::new(TableAccessExpression {
-                    prefix_exp: exp,
-                    key_exp,
-                })
+                Expression::table_access_expression(exp, key_exp)
+
             }
             TokenType::SeparatorDot => {
                 lexer.next_token();
                 let name = lexer.next_identifier_token();
-                let key_exp = StringExpression { value: name.value };
-                Box::new(TableAccessExpression {
-                    prefix_exp: exp,
-                    key_exp: Box::new(key_exp),
-                })
+                let key_exp = Expression::StringExpression( name.value );
+                Expression::table_access_expression(exp, key_exp)
             }
             TokenType::SeparatorColon
             | TokenType::SeparatorOpenParenthesis
@@ -338,11 +276,11 @@ fn _parse_prefix_expression(
     }
 }
 
-fn parse_parenthesis_expression(lexer: &mut Lexer) -> Box<dyn Expression> {
+fn parse_parenthesis_expression(lexer: &mut Lexer) -> Expression {
     lexer.next_special_token(TokenType::SeparatorOpenParenthesis);
     let exp = parse_expression(lexer);
     lexer.next_special_token(TokenType::SeparatorCloseParenthesis);
-    Box::new(ParenthesisExpression { exp })
+    Expression::parenthesis_expression( exp )
     // match exp {
     //   VarargExpression { }
     //     | FunctionCallExpressio { prefix_exp, name_exp, args }
@@ -354,31 +292,24 @@ fn parse_parenthesis_expression(lexer: &mut Lexer) -> Box<dyn Expression> {
 
 fn parse_function_call_expression(
     lexer: &mut Lexer,
-    prefix_exp: Box<dyn Expression>,
-) -> Box<FunctionCallExpression> {
+    prefix_exp: Expression,
+) -> Expression {
     let name_exp = parse_name_expression(lexer);
     let args = parse_args(lexer);
-
-    Box::new(FunctionCallExpression {
-        prefix_exp,
-        name_exp,
-        args,
-    })
+    Expression::function_call_expression(prefix_exp, name_exp, args)
 }
 
-fn parse_name_expression(lexer: &mut Lexer) -> Box<StringExpression> {
+fn parse_name_expression(lexer: &mut Lexer) -> Expression {
     if lexer.peek_token().kind == TokenType::SeparatorColon {
         lexer.next_token();
         let token = lexer.next_identifier_token();
-        Box::new(StringExpression { value: token.value })
+        Expression::StringExpression( token.value )
     } else {
-        Box::new(StringExpression {
-            value: String::from(""),
-        })
+        Expression::StringExpression( String::from("") )
     }
 }
 
-fn parse_args(lexer: &mut Lexer) -> Vec<Box<dyn Expression>> {
+fn parse_args(lexer: &mut Lexer) -> Vec<Expression> {
     match lexer.peek_token().kind {
         TokenType::SeparatorOpenParenthesis => {
             lexer.next_token();
@@ -394,9 +325,7 @@ fn parse_args(lexer: &mut Lexer) -> Vec<Box<dyn Expression>> {
         }
         _ => {
             let string = lexer.next_special_token(TokenType::String);
-            vec![Box::new(StringExpression {
-                value: string.value,
-            })]
+            vec![Expression::StringExpression(string.value)]
         }
     }
 }
