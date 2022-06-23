@@ -3,6 +3,6 @@ use super::statement::Statement;
 
 #[derive(Debug)]
 pub(crate) struct Block {
-    pub statements: Vec<Box<dyn Statement>>,
-    pub return_expression: Vec<Box<dyn Expression>>,
+    pub statements: Vec<Statement>,
+    pub return_expression: Vec<Expression>,
 }
