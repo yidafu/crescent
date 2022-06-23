@@ -5,90 +5,103 @@ use super::{
     expression::{Expression, FunctionDefinedExpression},
 };
 
-pub(crate) trait Statement : Debug {}
+pub(crate) enum Statement {
+    EmptyStatement,
+    BreakStatement,
+    LabelStatement,
+    GotoStatement(String),
+    DotStatement,
+    WhileStatement(Expression, Block),
+}
 
 #[derive(Debug)]
 pub(crate) struct EmptyStatement {}
 
-impl Statement for EmptyStatement {}
-
 #[derive(Debug)]
 pub(crate) struct BreakStatement {}
 
-impl Statement for BreakStatement {}
+impl BreakStatement {}
 
 #[derive(Debug)]
 pub(crate) struct LabelStatement {
     pub(crate) name: String,
 }
 
-impl Statement for LabelStatement {}
+impl LabelStatement {}
 
 #[derive(Debug)]
 pub(crate) struct GotoStatement {
     pub(crate) name: String,
 }
 
-impl Statement for GotoStatement {}
+impl GotoStatement {
+    fn new(name: String) -> GotoStatement {
+        GotoStatement { name }
+    }
+}
 
 #[derive(Debug)]
 pub(crate) struct DotStatement {}
 
-impl Statement for DotStatement {}
+impl DotStatement {}
 
 #[derive(Debug)]
 pub(crate) struct WhileStatement {
-    pub(crate) condition: Box<dyn Expression>,
-    pub(crate) block: Box<Block>,
-}
-
-impl Statement for WhileStatement {}
-
-#[derive(Debug)]
-pub(crate) struct RepeatStatement {
-    pub(crate) condition: Box<dyn Expression>,
-    pub(crate) block: Box<Block>,
-}
-
-impl Statement for RepeatStatement {}
-
-#[derive(Debug)]
-pub(crate) struct IfStatement {
-    pub(crate) condition: Box<dyn Expression>,
-    pub(crate) then_block: Box<Block>,
-    pub(crate) else_block: Box<dyn Statement>,
-}
-
-impl Statement for IfStatement {}
-
-#[derive(Debug)]
-pub(crate) struct ForStatement {
-    pub(crate) initial: Box<dyn Expression>,
-    pub(crate) condition: Box<dyn Expression>,
-    pub(crate) increment: Box<dyn Expression>,
+    pub(crate) condition: Expression,
     pub(crate) block: Block,
 }
 
-impl Statement for ForStatement {}
+impl WhileStatement {
+    fn new(condition: Expression, block: Block) -> WhileStatement {
+        WhileStatement { condition, block }
+    }
+}
+
+#[derive(Debug)]
+pub(crate) struct RepeatStatement {
+    pub(crate) condition: Box<Expression>,
+    pub(crate) block: Box<Block>,
+}
+
+impl RepeatStatement {}
+
+#[derive(Debug)]
+pub(crate) struct IfStatement {
+    pub(crate) condition: Box<Expression>,
+    pub(crate) then_block: Box<Block>,
+    pub(crate) else_block: Box<Statement>,
+}
+
+impl IfStatement {}
+
+#[derive(Debug)]
+pub(crate) struct ForStatement {
+    pub(crate) initial: Box<Expression>,
+    pub(crate) condition: Box<Expression>,
+    pub(crate) increment: Box<Expression>,
+    pub(crate) block: Block,
+}
+
+impl ForStatement {}
 
 #[derive(Debug)]
 pub(crate) struct LocalVarDeclareStatement {
     pub(crate) name_list: Vec<String>,
-    pub(crate) exp_list: Vec<Box<dyn Expression>>,
+    pub(crate) exp_list: Vec<Box<Expression>>,
 }
 
-impl Statement for LocalVarDeclareStatement {}
+impl LocalVarDeclareStatement {}
 
 #[derive(Debug)]
 pub(crate) struct AssignStatement {
-    pub(crate) var_list: Vec<Box<dyn Expression>>,
-    pub(crate) exp_list: Vec<Box<dyn Expression>>,
+    pub(crate) var_list: Vec<Box<Expression>>,
+    pub(crate) exp_list: Vec<Box<Expression>>,
 }
-impl Statement for AssignStatement {}
+impl AssignStatement {}
 
 #[derive(Debug)]
 pub(crate) struct LocalFunctionDefinedStatement {
     pub(crate) name: String,
     pub(crate) exp: Box<FunctionDefinedExpression>,
 }
-impl Statement for LocalFunctionDefinedStatement {}
+impl LocalFunctionDefinedStatement {}
