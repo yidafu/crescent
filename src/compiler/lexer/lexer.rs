@@ -2,7 +2,7 @@ use super::chunk_stream::ChunkStream;
 use super::token::{Token, TokenType};
 use super::utils::{is_digit, is_hex_digit, is_letter, is_whitespace};
 
-pub(crate) struct Lexer {
+pub struct Lexer {
     pub stream: ChunkStream,
     pub current_token: Token,
     pub is_parsing_token: bool,
@@ -17,6 +17,11 @@ impl Lexer {
         }
     }
 
+    pub fn create(name: &str, chunk: &str) -> Lexer {
+        let stream = ChunkStream::new(name, chunk);
+        Lexer::new(stream)
+    }
+
     pub fn peek_token(&mut self) -> Token {
         if !self.is_parsing_token {
             self.is_parsing_token = true;
@@ -25,16 +30,25 @@ impl Lexer {
         self.current_token.clone()
     }
 
-    pub fn next_special_token(&mut self, kind: TokenType) -> Token {
+    pub fn next_if_special_token(&mut self, kind: TokenType) {
+        self.should_be_special_token(kind);
+        self.next_token();
+    }
+
+    pub fn should_be_special_token(&mut self, kind: TokenType) -> Token {
         let token = self.peek_token();
         if token.kind != kind {
             panic!("Expect token {:?}, but got {:?}", kind, token)
         }
-        self.next_token()
+        token
     }
 
-    pub fn next_identifier_token(&mut self) -> Token {
-        self.next_special_token(TokenType::Identifier)
+    pub fn should_be_identifier_token(&mut self) -> Token {
+        let token = self.peek_token();
+        if token.kind != TokenType::Identifier {
+            panic!("Expect token {:?}, but got {:?}", TokenType::Identifier, token)
+        }
+        token
     }
 
     pub fn next_token(&mut self) -> Token {
@@ -197,6 +211,7 @@ impl Lexer {
                     // Token::not_eqaul_token()
                     self.parse_long_string()
                 } else {
+                    self.stream.next();
                     Token::open_bracket_token()
                 }
             }
@@ -313,7 +328,7 @@ impl Lexer {
         let mut identifier_string = String::new();
         identifier_string.push(self.stream.next());
         let mut letter = self.stream.peek();
-        while is_letter(letter) || letter == '-' {
+        while is_letter(letter) || letter == '-' || is_digit(letter) {
             self.stream.next();
             identifier_string.push(letter);
             letter = self.stream.peek();
@@ -459,7 +474,7 @@ fn test_parse_digit() {
 fn test_parse_identifier() {
     let mut lexer = Lexer::new(ChunkStream {
         chunk_name: String::from("test.lua"),
-        chunk: String::from("if true then else end function() end")
+        chunk: String::from("if true then else end function() end param1")
             .chars()
             .collect(),
         line: 1,
@@ -476,4 +491,6 @@ fn test_parse_identifier() {
     assert_eq!(lexer.next_token(), Token::open_paren_token());
     assert_eq!(lexer.next_token(), Token::close_paren_token());
     assert_eq!(lexer.next_token(), Token::end_token());
+    assert_eq!(lexer.next_token(), Token::identifier_token("param1"));
+    // assert_eq!(lexer.next_token(), Token::identifier_token("_param"));
 }
