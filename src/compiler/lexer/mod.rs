@@ -1,4 +1,4 @@
-pub(crate) mod chunk_stream;
-pub(crate) mod lexer;
-pub(crate) mod token;
+pub mod chunk_stream;
+pub mod lexer;
+pub mod token;
 mod utils;

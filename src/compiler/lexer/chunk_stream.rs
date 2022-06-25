@@ -1,4 +1,4 @@
-pub(crate) struct ChunkStream {
+pub struct ChunkStream {
     pub chunk: Vec<char>,
     pub chunk_name: String,
     pub line: i32,
