@@ -1,3 +1,4 @@
+use crate::compiler::ast::block;
 use crate::compiler::lexer::token::TokenType;
 
 use super::super::ast::block::Block;
@@ -7,6 +8,14 @@ use super::super::lexer::lexer::Lexer;
 use super::super::lexer::token::Token;
 use super::parse_expression::parse_expression_list;
 use super::parse_statement::parse_statement;
+
+
+pub fn parse(lexer: &mut Lexer) -> Block {
+    let block = parse_block(lexer);
+    lexer.should_be_special_token(TokenType::Eof);
+    block
+}
+
 
 pub fn parse_block(lexer: &mut Lexer) -> Block {
     Block {

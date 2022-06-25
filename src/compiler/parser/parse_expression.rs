@@ -4,11 +4,12 @@ use crate::compiler::{
 };
 
 use super::{
-    parser::parse_block, parse_table_constructor_expression::parse_table_constructor_expression,
+    parse_table_constructor_expression::parse_table_constructor_expression, parser::parse_block,
 };
 
 pub fn parse_expression_list(lexer: &mut Lexer) -> Vec<Expression> {
     let mut exp_list: Vec<Expression> = Vec::new();
+    exp_list.push(parse_expression(lexer));
 
     while lexer.peek_token().kind == TokenType::SeparetorComma {
         lexer.next_token(); // eat ,
@@ -157,6 +158,7 @@ fn parse_expression_2(lexer: &mut Lexer) -> Expression {
     }
 }
 
+/// TODO: optimize
 fn parse_expression_1(lexer: &mut Lexer) -> Expression {
     let mut exp_l = parse_expression_0(lexer);
     if lexer.peek_token().kind == TokenType::OperatorPow {
@@ -212,7 +214,8 @@ fn parse_number_expression(lexer: &mut Lexer) -> Expression {
 }
 
 pub fn parse_function_defined_expression(lexer: &mut Lexer) -> Expression {
-    lexer.should_be_special_token(TokenType::SeparatorOpenParenthesis); // eat function keywork
+    // eat function keyword
+    lexer.should_be_special_token(TokenType::SeparatorOpenParenthesis);
     lexer.next_token();
     let (is_vararg, param_list) = parse_param_list(lexer);
     lexer.should_be_special_token(TokenType::SeparatorCloseParenthesis);
@@ -254,12 +257,15 @@ fn parse_param_list(lexer: &mut Lexer) -> (bool, Vec<String>) {
 }
 
 pub fn parse_prefix_expression(lexer: &mut Lexer) -> Expression {
+    let mut exp;
     if lexer.peek_token().kind == TokenType::Identifier {
-        Expression::NameString(lexer.should_be_identifier_token().value)
+        exp = Expression::NameString(lexer.peek_token().value);
+        lexer.next_token();
     } else {
-        let exp = parse_parenthesis_expression(lexer);
-        _parse_prefix_expression(lexer, exp)
+        exp = parse_parenthesis_expression(lexer);
     }
+
+    _parse_prefix_expression(lexer, exp)
 }
 
 fn _parse_prefix_expression(lexer: &mut Lexer, mut exp: Expression) -> Expression {
@@ -353,6 +359,15 @@ fn test_expression() {
 }
 
 #[test]
+fn test_expresion_list() {
+    let exp = parse_expression_list(&mut Lexer::new(ChunkStream::new(
+        "test.lua",
+        "1 * 2 + 3,1 + 2 * 3",
+    )));
+
+    println!("{:#?}", exp);
+}
+#[test]
 fn test_function_expression() {
     let exp = parse_expression(&mut Lexer::new(ChunkStream::new(
         "test.lua",
@@ -398,6 +413,25 @@ fn test_function_call_expression() {
         "test.lua",
         "print(10,24)",
     )));
+    match exp {
+        Expression::FunctionCallExpression(fnCall) => {
+            assert_eq!(
+                fnCall.name_exp,
+                Box::new(Expression::StringExpression("".to_string()))
+            );
+            assert_eq!(
+                fnCall.prefix_exp,
+                Box::new(Expression::NameString("print".to_string()))
+            );
 
-    print!("{:#?}", exp);
+            assert_eq!(
+                fnCall.args,
+                vec![
+                    Expression::integet_expresion(10),
+                    Expression::integet_expresion(24)
+                ]
+            )
+        }
+        _ => panic!("{:#?}", exp),
+    }
 }
