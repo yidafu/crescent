@@ -8,7 +8,7 @@ use super::super::lexer::token::Token;
 use super::parse_expression::parse_expression_list;
 use super::parse_statement::parse_statement;
 
-pub(crate) fn parse_block(lexer: &mut Lexer) -> Block {
+pub fn parse_block(lexer: &mut Lexer) -> Block {
     Block {
         statements: parse_statements(lexer),
         return_expression: parse_return_expression(lexer),

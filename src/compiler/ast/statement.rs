@@ -6,7 +6,7 @@ use super::{
 };
 
 #[derive(Debug)]
-pub(crate) enum Statement {
+pub enum Statement {
     EmptyStatement,
     BreakStatement,
     LabelStatement(String),
@@ -75,23 +75,23 @@ impl Statement {
 }
 
 // #[derive(Debug)]
-// pub(crate) struct EmptyStatement {}
+// pub struct EmptyStatement {}
 
 // #[derive(Debug)]
-// pub(crate) struct BreakStatement {}
+// pub struct BreakStatement {}
 
 // impl BreakStatement {}
 
 // #[derive(Debug)]
-// pub(crate) struct LabelStatement {
-//     pub(crate) name: String,
+// pub struct LabelStatement {
+//     pub name: String,
 // }
 
 // impl LabelStatement {}
 
 // #[derive(Debug)]
-// pub(crate) struct GotoStatement {
-//     pub(crate) name: String,
+// pub struct GotoStatement {
+//     pub name: String,
 // }
 
 // impl GotoStatement {
@@ -101,14 +101,14 @@ impl Statement {
 // }
 
 // #[derive(Debug)]
-// pub(crate) struct DotStatement {}
+// pub struct DotStatement {}
 
 // impl DotStatement {}
 
 #[derive(Debug)]
-pub(crate) struct WhileStatement {
-    pub(crate) condition: Expression,
-    pub(crate) block: Block,
+pub struct WhileStatement {
+    pub condition: Expression,
+    pub block: Block,
 }
 
 impl WhileStatement {
@@ -118,18 +118,18 @@ impl WhileStatement {
 }
 
 #[derive(Debug)]
-pub(crate) struct RepeatStatement {
-    pub(crate) condition: Expression,
-    pub(crate) block: Block,
+pub struct RepeatStatement {
+    pub condition: Expression,
+    pub block: Block,
 }
 
 impl RepeatStatement {}
 
 
-pub(crate) struct IfStatement {
-    pub(crate) condition: Expression,
-    pub(crate) then_block: Block,
-    pub(crate) else_block: Block,
+pub struct IfStatement {
+    pub condition: Expression,
+    pub then_block: Block,
+    pub else_block: Block,
 }
 
 impl Debug for IfStatement {
@@ -139,34 +139,34 @@ impl Debug for IfStatement {
 }
 
 #[derive(Debug)]
-pub(crate) struct ForStatement {
-    pub(crate) initial: Expression,
-    pub(crate) condition: Expression,
-    pub(crate) increment: Expression,
-    pub(crate) block: Block,
+pub struct ForStatement {
+    pub initial: Expression,
+    pub condition: Expression,
+    pub increment: Expression,
+    pub block: Block,
 }
 
 impl ForStatement {}
 
 #[derive(Debug)]
-pub(crate) struct LocalVarDeclareStatement {
-    pub(crate) name_list: Vec<String>,
-    pub(crate) exp_list: Vec<Expression>,
+pub struct LocalVarDeclareStatement {
+    pub name_list: Vec<String>,
+    pub exp_list: Vec<Expression>,
 }
 
 impl LocalVarDeclareStatement {}
 
 #[derive(Debug)]
-pub(crate) struct AssignStatement {
-    pub(crate) var_list: Vec<Expression>,
-    pub(crate) exp_list: Vec<Expression>,
+pub struct AssignStatement {
+    pub var_list: Vec<Expression>,
+    pub exp_list: Vec<Expression>,
 }
 impl AssignStatement {}
 
 #[derive(Debug)]
-pub(crate) struct LocalFunctionDefinedStatement {
-    pub(crate) name: String,
-    pub(crate) exp: Expression,
+pub struct LocalFunctionDefinedStatement {
+    pub name: String,
+    pub exp: Expression,
 }
 impl LocalFunctionDefinedStatement {}
 

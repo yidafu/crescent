@@ -1,4 +1,4 @@
-pub(crate) mod block;
-pub(crate) mod expression;
-pub(crate) mod statement;
+pub mod block;
+pub mod expression;
+pub mod statement;
 mod node;

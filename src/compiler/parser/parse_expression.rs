@@ -1,11 +1,13 @@
 use crate::compiler::{
-    ast::expression::*,
+    ast::{expression::*, statement::Statement},
     lexer::{chunk_stream::ChunkStream, lexer::Lexer, token::TokenType},
 };
 
-use super::parser::parse_block;
+use super::{
+    parser::parse_block, parse_table_constructor_expression::parse_table_constructor_expression,
+};
 
-pub(crate) fn parse_expression_list(lexer: &mut Lexer) -> Vec<Expression> {
+pub fn parse_expression_list(lexer: &mut Lexer) -> Vec<Expression> {
     let mut exp_list: Vec<Expression> = Vec::new();
 
     while lexer.peek_token().kind == TokenType::SeparetorComma {
@@ -15,7 +17,7 @@ pub(crate) fn parse_expression_list(lexer: &mut Lexer) -> Vec<Expression> {
     exp_list
 }
 
-pub(crate) fn parse_expression(lexer: &mut Lexer) -> Expression {
+pub fn parse_expression(lexer: &mut Lexer) -> Expression {
     parse_expression_12(lexer)
 }
 
@@ -184,10 +186,12 @@ fn parse_expression_0(lexer: &mut Lexer) -> Expression {
             Expression::FalseExpression
         }
         TokenType::String => {
-            let token = lexer.next_token();
-            Expression::StringExpression( token.value )
+            let token = lexer.peek_token();
+            lexer.next_token();
+            Expression::StringExpression(token.value)
         }
         TokenType::Number => parse_number_expression(lexer),
+        TokenType::SeparatorOpenBrace => parse_table_constructor_expression(lexer),
         TokenType::KeywrodFunction => {
             lexer.next_token();
             parse_function_defined_expression(lexer)
@@ -200,51 +204,58 @@ fn parse_number_expression(lexer: &mut Lexer) -> Expression {
     let token = lexer.peek_token();
     if token.value.contains('.') {
         lexer.next_token();
-        Expression::FloatExpresion( token.value.parse::<f64>().unwrap())
+        Expression::FloatExpresion(token.value.parse::<f64>().unwrap())
     } else {
         lexer.next_token();
-        Expression::IntegerExpression( token.value.parse::<i64>().unwrap())
+        Expression::IntegerExpression(token.value.parse::<i64>().unwrap())
     }
 }
 
-pub(crate) fn parse_function_defined_expression(
-    lexer: &mut Lexer,
-) -> Expression {
-    lexer.next_special_token(TokenType::SeparatorOpenParenthesis);
-    let param_list = parse_param_list(lexer);
-    lexer.next_special_token(TokenType::SeparatorCloseParenthesis);
+pub fn parse_function_defined_expression(lexer: &mut Lexer) -> Expression {
+    lexer.should_be_special_token(TokenType::SeparatorOpenParenthesis); // eat function keywork
+    lexer.next_token();
+    let (is_vararg, param_list) = parse_param_list(lexer);
+    lexer.should_be_special_token(TokenType::SeparatorCloseParenthesis);
+    lexer.next_token();
 
     let block = parse_block(lexer);
-    lexer.next_special_token(TokenType::KeywrodEnd);
-    Expression::function_defined_expression(param_list, false, block)
+    lexer.should_be_special_token(TokenType::KeywrodEnd);
+    lexer.next_token();
+    Expression::function_defined_expression(param_list, is_vararg, block)
 }
 
-fn parse_param_list(lexer: &mut Lexer) -> Vec<String> {
+fn parse_param_list(lexer: &mut Lexer) -> (bool, Vec<String>) {
     match lexer.peek_token().kind {
-        TokenType::SeparatorCloseParenthesis => Vec::new(),
+        TokenType::SeparatorCloseParenthesis => (false, Vec::new()),
         TokenType::Vararg => {
             lexer.next_token();
-            Vec::new()
+            (false, Vec::new())
         }
         _ => {
+            let mut is_vararg = false;
             let mut name_list = Vec::new();
-            name_list.push(lexer.next_identifier_token().value);
+            name_list.push(lexer.should_be_identifier_token().value);
+            lexer.next_token();
             while lexer.peek_token().kind == TokenType::SeparetorComma {
                 lexer.next_token();
-                if lexer.peek_token().kind == TokenType::Identifier {
-                    name_list.push(lexer.next_token().value);
+                let token = lexer.peek_token();
+                if token.kind == TokenType::Identifier {
+                    name_list.push(token.value);
+                    lexer.next_token();
                 } else {
-                    lexer.next_special_token(TokenType::Vararg);
+                    is_vararg = true;
+                    lexer.should_be_special_token(TokenType::Vararg);
+                    lexer.next_token();
                 }
             }
-            name_list
+            (is_vararg, name_list)
         }
     }
 }
 
-pub(crate) fn parse_prefix_expression(lexer: &mut Lexer) -> Expression {
+pub fn parse_prefix_expression(lexer: &mut Lexer) -> Expression {
     if lexer.peek_token().kind == TokenType::Identifier {
-        Expression::NameString(lexer.next_identifier_token().value)
+        Expression::NameString(lexer.should_be_identifier_token().value)
     } else {
         let exp = parse_parenthesis_expression(lexer);
         _parse_prefix_expression(lexer, exp)
@@ -257,14 +268,13 @@ fn _parse_prefix_expression(lexer: &mut Lexer, mut exp: Expression) -> Expressio
             TokenType::SeparatorOpenBracket => {
                 lexer.next_token();
                 let key_exp = parse_expression(lexer);
-                lexer.next_special_token(TokenType::SeparatorCloseBracket);
+                lexer.next_if_special_token(TokenType::SeparatorCloseBracket);
                 Expression::table_access_expression(exp, key_exp)
-
             }
             TokenType::SeparatorDot => {
                 lexer.next_token();
-                let name = lexer.next_identifier_token();
-                let key_exp = Expression::StringExpression( name.value );
+                let name = lexer.should_be_identifier_token();
+                let key_exp = Expression::StringExpression(name.value);
                 Expression::table_access_expression(exp, key_exp)
             }
             TokenType::SeparatorColon
@@ -277,10 +287,10 @@ fn _parse_prefix_expression(lexer: &mut Lexer, mut exp: Expression) -> Expressio
 }
 
 fn parse_parenthesis_expression(lexer: &mut Lexer) -> Expression {
-    lexer.next_special_token(TokenType::SeparatorOpenParenthesis);
+    lexer.next_if_special_token(TokenType::SeparatorOpenParenthesis);
     let exp = parse_expression(lexer);
-    lexer.next_special_token(TokenType::SeparatorCloseParenthesis);
-    Expression::parenthesis_expression( exp )
+    lexer.next_if_special_token(TokenType::SeparatorCloseParenthesis);
+    Expression::parenthesis_expression(exp)
     // match exp {
     //   VarargExpression { }
     //     | FunctionCallExpressio { prefix_exp, name_exp, args }
@@ -290,10 +300,7 @@ fn parse_parenthesis_expression(lexer: &mut Lexer) -> Expression {
     // }
 }
 
-fn parse_function_call_expression(
-    lexer: &mut Lexer,
-    prefix_exp: Expression,
-) -> Expression {
+fn parse_function_call_expression(lexer: &mut Lexer, prefix_exp: Expression) -> Expression {
     let name_exp = parse_name_expression(lexer);
     let args = parse_args(lexer);
     Expression::function_call_expression(prefix_exp, name_exp, args)
@@ -302,10 +309,10 @@ fn parse_function_call_expression(
 fn parse_name_expression(lexer: &mut Lexer) -> Expression {
     if lexer.peek_token().kind == TokenType::SeparatorColon {
         lexer.next_token();
-        let token = lexer.next_identifier_token();
-        Expression::StringExpression( token.value )
+        let token = lexer.should_be_identifier_token();
+        Expression::StringExpression(token.value)
     } else {
-        Expression::StringExpression( String::from("") )
+        Expression::StringExpression(String::from(""))
     }
 }
 
@@ -317,14 +324,15 @@ fn parse_args(lexer: &mut Lexer) -> Vec<Expression> {
             if lexer.peek_token().kind != TokenType::SeparatorCloseParenthesis {
                 args = parse_expression_list(lexer);
             }
-            lexer.next_special_token(TokenType::SeparatorCloseParenthesis);
+            lexer.next_if_special_token(TokenType::SeparatorCloseParenthesis);
             args
         }
         TokenType::SeparatorOpenBrace => {
             todo!()
         }
         _ => {
-            let string = lexer.next_special_token(TokenType::String);
+            lexer.next_if_special_token(TokenType::String);
+            let string = lexer.peek_token();
             vec![Expression::StringExpression(string.value)]
         }
     }
@@ -334,5 +342,62 @@ fn parse_args(lexer: &mut Lexer) -> Vec<Expression> {
 fn test_simple_expression() {
     let exp = parse_expression(&mut Lexer::new(ChunkStream::new("test.lua", "1 + 2 * 3")));
 
-    print!("expression {:?}", exp)
+    print!("expression {:#?}", exp)
+}
+
+#[test]
+fn test_expression() {
+    let exp = parse_expression(&mut Lexer::new(ChunkStream::new("test.lua", "1 * 2 + 3")));
+
+    print!("expression {:#?}", exp)
+}
+
+#[test]
+fn test_function_expression() {
+    let exp = parse_expression(&mut Lexer::new(ChunkStream::new(
+        "test.lua",
+        "function (param1, param2) break end",
+    )));
+
+    match exp {
+        Expression::FunctionDefinedExpression(fnDef) => {
+            assert_eq!(fnDef.is_vararg, false);
+            assert_eq!(
+                fnDef.param_list,
+                vec!["param1".to_string(), "param2".to_string()]
+            );
+            // assert_eq!(fnDef.block.statements[0], Statement::BreakStatement);
+        }
+        _ => panic!("{:#?}", exp),
+    }
+}
+
+#[test]
+fn test_vararg_function_expression() {
+    let exp = parse_expression(&mut Lexer::new(ChunkStream::new(
+        "test.lua",
+        "function (param1, param2, ...) break end",
+    )));
+
+    match exp {
+        Expression::FunctionDefinedExpression(fnDef) => {
+            assert_eq!(fnDef.is_vararg, true);
+            assert_eq!(
+                fnDef.param_list,
+                vec!["param1".to_string(), "param2".to_string()]
+            );
+            // assert_eq!(fnDef.block.statements[0], Statement::BreakStatement);
+        }
+        _ => panic!("{:#?}", exp),
+    }
+}
+
+#[test]
+fn test_function_call_expression() {
+    let exp = parse_expression(&mut Lexer::new(ChunkStream::new(
+        "test.lua",
+        "print(10,24)",
+    )));
+
+    print!("{:#?}", exp);
 }

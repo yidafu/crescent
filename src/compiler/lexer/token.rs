@@ -1,11 +1,11 @@
 #[derive(PartialEq, Debug, Clone)]
-pub(crate) struct Token {
+pub struct Token {
     pub kind: TokenType,
     pub value: String,
 }
 
 #[derive(PartialEq, Debug, Copy, Clone)]
-pub(crate) enum TokenType {
+pub enum TokenType {
     Eof,
     Vararg,
     SeparatorSemicolon,
@@ -154,14 +154,14 @@ impl Token {
 
     pub fn open_bracket_token() -> Token {
         Token {
-            kind: TokenType::SeparatorOpenParenthesis,
+            kind: TokenType::SeparatorOpenBracket,
             value: String::from("["),
         }
     }
 
     pub fn close_bracket_token() -> Token {
         Token {
-            kind: TokenType::SeparatorCloseParenthesis,
+            kind: TokenType::SeparatorCloseBracket,
             value: String::from("]"),
         }
     }
