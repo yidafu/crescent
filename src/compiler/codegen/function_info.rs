@@ -1,53 +1,45 @@
-use std::{
-    borrow::{Borrow, BorrowMut},
-    cell::{Ref, RefCell},
-    collections::HashMap,
-    ops::Deref,
-    rc::Rc,
-};
-
-use crate::compiler::ast::expression::Expression;
+use std::{collections::HashMap, rc::Rc};
 
 use super::linked_list::{Link, LinkedList};
 
-const MAXARG_sBx: u64 = 0;
-const OP_JMP: u64 = 0;
+const MAXARG_sBx: i64 = 0;
+const OP_JMP: i64 = 0;
 
 #[derive(Debug, Eq, Hash, PartialEq, Clone)]
-struct Any {}
+pub struct Any {}
 
 #[derive(Debug, Clone)]
 pub struct FunctionInfo {
-    constants: HashMap<Any, u64>,
-    used_regs: u64,
-    max_regs: u64,
+    pub constants: HashMap<Any, i64>,
+    pub used_regs: i64,
+    pub max_regs: i64,
 
-    scope_level: u64,
-    local_variables: LinkedList<LocalVariableInfo>,
-    local_names: HashMap<String, Link<LocalVariableInfo>>,
+    pub scope_level: i64,
+    pub local_variables: LinkedList<LocalVariableInfo>,
+    pub local_names: HashMap<String, Link<LocalVariableInfo>>,
 
-    parent: Option<Rc<FunctionInfo>>,
-    upvalues: HashMap<String, UpvalueInfo>,
+    pub parent: Option<Rc<FunctionInfo>>,
+    pub upvalues: HashMap<String, UpvalueInfo>,
 
-    breaks: Vec<Option<Vec<u64>>>,
+    pub breaks: Vec<Option<Vec<i64>>>,
 
-    instructions: Vec<u32>,
+    pub instructions: Vec<u32>,
 }
 
 impl FunctionInfo {
-    pub fn index_of_constant(&mut self, key: Any) -> u64 {
+    pub fn index_of_constant(&mut self, key: Any) -> i64 {
         if self.constants.get(&key).is_some() {
             let idx = self.constants.get(&key).unwrap();
             idx.clone()
         } else {
-            let idx = u64::try_from(self.constants.len()).unwrap();
+            let idx = i64::try_from(self.constants.len()).unwrap();
             self.constants.insert(key, idx);
             idx
         }
         // self.constants.get(&key).unwrap();
     }
 
-    pub fn alloc_register(&mut self) -> u64 {
+    pub fn alloc_register(&mut self) -> i64 {
         self.max_regs += 1;
         if self.used_regs > 255 {
             panic!("Function or expresion needs too many registers.");
@@ -60,7 +52,7 @@ impl FunctionInfo {
         self.used_regs - 1
     }
 
-    pub fn alloc_registers(&mut self, n: u64) -> u64 {
+    pub fn alloc_registers(&mut self, n: i64) -> i64 {
         for _ in 0..n {
             self.alloc_register();
         }
@@ -72,7 +64,7 @@ impl FunctionInfo {
         self.used_regs -= 1;
     }
 
-    pub fn free_registers(&mut self, n: u64) {
+    pub fn free_registers(&mut self, n: i64) {
         for _ in 0..n {
             self.free_register();
         }
@@ -99,7 +91,7 @@ impl FunctionInfo {
             let s_bx = self.pc() - pc.clone();
 
             let i = (s_bx + MAXARG_sBx) << 14 | a << 6 | OP_JMP;
-            self.instructions[pc as usize] = i;
+            // self.instructions[pc as usize] = i;
         }
 
         self.scope_level -= 1;
@@ -109,15 +101,15 @@ impl FunctionInfo {
             .for_each(|(name, var_info)| self.remove_local_variable(var_info));
     }
 
-    pub fn pc(&self) -> u64 {
+    pub fn pc(&self) -> i64 {
         todo!()
     }
 
-    pub fn get_jump_arg_a(&mut self) -> u64 {
+    pub fn get_jump_arg_a(&mut self) -> i64 {
         todo!()
     }
 
-    pub fn add_breack_jump(&mut self, pc: u64) {
+    pub fn add_breack_jump(&mut self, pc: i64) {
         let mut i = self.scope_level;
         while i >= 0 {
             let break_vec = self.breaks.get(i as usize);
@@ -132,7 +124,7 @@ impl FunctionInfo {
         panic!("<break> as line ? not inside a loop");
     }
 
-    pub fn add_local_variable(&mut self, name: String) -> u64 {
+    pub fn add_local_variable(&mut self, name: String) -> i64 {
         let local_variable_info = LocalVariableInfo::new(
             name.to_string(),
             self.scope_level,
@@ -177,18 +169,18 @@ impl FunctionInfo {
         local_var_value
     }
 
-    pub fn slot_of_local_variable(&mut self, name: String) -> u64 {
+    pub fn slot_of_local_variable(&mut self, name: String) -> i64 {
         let var_name = self.get_lacal_variable_by_name(name);
         if var_name.is_some() {
             let var_info = var_name.unwrap();
             // local_node.slot
             var_info.slot
         } else {
-            0
+            -1
         }
     }
 
-    pub fn index_of_upvalue(&mut self, name: String) -> u64 {
+    pub fn index_of_upvalue(&mut self, name: String) -> i64 {
         let upvalue = self.upvalues.get(&name);
         if (upvalue.is_some()) {
             return upvalue.unwrap().index;
@@ -199,7 +191,7 @@ impl FunctionInfo {
                 .get_lacal_variable_by_name(name.clone());
             if local_var.is_some() {
                 let local_var_value = local_var.unwrap();
-                let idx = self.upvalues.len() as u64;
+                let idx = self.upvalues.len() as i64;
                 self.upvalues.insert(
                     name,
                     UpvalueInfo {
@@ -215,7 +207,7 @@ impl FunctionInfo {
                     .unwrap()
                     .index_of_upvalue(name.clone());
                 if uv_indx >= 0 {
-                    let idx = self.upvalues.len() as u64;
+                    let idx = self.upvalues.len() as i64;
                     self.upvalues.insert(
                         name,
                         UpvalueInfo {
@@ -226,24 +218,40 @@ impl FunctionInfo {
                     );
                     return idx;
                 } else {
-                    return 0;
+                    return -1;
                 }
             }
         }
-        0
+        -1
+    }
+
+    pub fn emit_return(&mut self, a: i64, r: i64) {
+        todo!()
+    }
+
+    pub fn emit_load_nil(&mut self, arga: i64, argx: i64) {
+        todo!()
+    }
+
+    pub fn emit_load_bool(&mut self, arga: i64, argx: i64, c: i64) {
+        todo!()
+    }
+
+    pub fn emit_load_k(&mut self, arga: i64, val: i64) {
+        todo!()
     }
 }
 
 #[derive(Debug, Clone)]
-struct LocalVariableInfo {
+pub struct LocalVariableInfo {
     name: String,
-    scope_level: u64,
-    slot: u64,
+    scope_level: i64,
+    slot: i64,
     captured: bool,
 }
 
 impl LocalVariableInfo {
-    pub fn new(name: String, scope_level: u64, slot: u64, captured: bool) -> LocalVariableInfo {
+    pub fn new(name: String, scope_level: i64, slot: i64, captured: bool) -> LocalVariableInfo {
         LocalVariableInfo {
             name,
             scope_level,
@@ -254,8 +262,8 @@ impl LocalVariableInfo {
 }
 
 #[derive(Debug, Clone)]
-struct UpvalueInfo {
-    local_variable_slot: u64,
-    upvale_index: u64,
-    index: u64,
+pub struct UpvalueInfo {
+    pub local_variable_slot: i64,
+    pub upvale_index: i64,
+    pub index: i64,
 }
