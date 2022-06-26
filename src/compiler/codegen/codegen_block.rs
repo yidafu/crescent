@@ -54,6 +54,7 @@ pub fn codegen_expression(func_info: &mut FunctionInfo, exp: &Expression, arga: 
       Expression::FalseExpression => func_info.emit_load_bool(arga, 0, 0),
       Expression::TrueExpression => func_info.emit_load_bool(arga, 1, 0),
       Expression::IntegerExpression(value) => func_info.emit_load_k(arga, value.clone()),
-      Expression::FloatExpresion(value) => func_info.emit_load_k(arga, value.clone()),
+      // Expression::FloatExpresion(value) => func_info.emit_load_k(arga, value.clone()),
+      _ => ()
   }
 }
