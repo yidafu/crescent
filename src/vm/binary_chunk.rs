@@ -33,12 +33,17 @@ pub struct Header {
   luac_num: f64,
 }
 
+#[derive(Debug)]
+pub struct AbsoluteLine {
+  pub pc: u32,
+  pub line: u32,
+}
 
 #[derive(Debug)]
 pub struct Prototype {
   pub source: String,
-  pub line_defined: u32,
-  pub last_line_defined: u32,
+  pub line_defined: i32,
+  pub last_line_defined: i32,
   pub num_params: u8,
   pub is_vararg: u8,
   pub max_statck_size: u8,
@@ -46,7 +51,8 @@ pub struct Prototype {
   pub constants: Vec<Value>,
   pub upvalues: Vec<Upvalue>,
   pub prototypes: Option<Vec<Prototype>>,
-  pub line_info: Vec<u32>,
+  pub line_info: Vec<u8>,
+  pub abs_line_list: Vec<AbsoluteLine>,
   pub local_variable: Vec<LocalVariable>,
   pub upvalue_names: Vec<String>,
 }

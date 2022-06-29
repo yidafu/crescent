@@ -6,3 +6,4 @@
 + <https://poga.github.io/lua53-notes/introduction.html>
 + <http://files.catwell.info/misc/mirror/lua-5.2-bytecode-vm-dirk-laurie/lua52vm.html>
 + <https://openpunk.com/pages/lua-bytecode-parser/>
++ <https://github.com/lua/lua>
