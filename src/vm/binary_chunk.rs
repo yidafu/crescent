@@ -73,8 +73,8 @@ pub struct Upvalue {
 #[derive(Debug)]
 pub struct LocalVariable {
   pub var_name: String,
-  pub start_pc: u32,
-  pub end_pc: u32,
+  pub start_pc: i32,
+  pub end_pc: i32,
 }
 
 #[derive(Debug, Clone)]
