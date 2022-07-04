@@ -2,7 +2,8 @@ use std::fmt::Debug;
 
 use super::block::Block;
 
-#[derive(Debug)]
+
+#[derive(Debug, PartialEq, PartialOrd)]
 pub enum Expression {
     EmptyExpression,
     NilExpression,
@@ -24,6 +25,10 @@ pub enum Expression {
 }
 
 impl Expression {
+    pub fn integet_expresion(value: i64) -> Expression {
+        Expression::IntegerExpression(value)
+    }
+
     #[inline]
     pub fn unary_expression(operator: String, exp: Expression) -> Expression {
         Expression::UnaryExpression(UnaryExpression {
@@ -81,19 +86,20 @@ impl Expression {
         key_exps: Vec<Expression>,
         value_exps: Vec<Expression>,
     ) -> Expression {
-        Expression::TableConstructorExpression(TableConstructorExpression { key_exps, value_exps })
+        Expression::TableConstructorExpression(TableConstructorExpression {
+            key_exps,
+            value_exps,
+        })
     }
-
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, PartialOrd)]
 pub struct UnaryExpression {
     pub operator: String,
     pub exp: Box<Expression>,
 }
 
-
-#[derive(Debug)]
+#[derive(Debug, PartialEq, PartialOrd)]
 pub struct BinaryExpression {
     pub operator: String,
     pub exp_l: Box<Expression>,
@@ -101,20 +107,20 @@ pub struct BinaryExpression {
 }
 impl BinaryExpression {}
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, PartialOrd)]
 pub struct ConcatExpression {
     pub exps: Vec<Expression>,
 }
 impl ConcatExpression {}
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, PartialOrd)]
 pub struct TableConstructorExpression {
     pub key_exps: Vec<Expression>,
     pub value_exps: Vec<Expression>,
 }
 impl TableConstructorExpression {}
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, PartialOrd)]
 pub struct FunctionDefinedExpression {
     pub param_list: Vec<String>,
     pub is_vararg: bool,
@@ -123,20 +129,20 @@ pub struct FunctionDefinedExpression {
 
 impl FunctionDefinedExpression {}
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, PartialOrd)]
 pub struct ParenthesisExpression {
     pub exp: Box<Expression>,
 }
 
 impl ParenthesisExpression {}
-#[derive(Debug)]
+#[derive(Debug, PartialEq, PartialOrd)]
 pub struct TableAccessExpression {
     pub prefix_exp: Box<Expression>,
     pub key_exp: Box<Expression>,
 }
 impl TableAccessExpression {}
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, PartialOrd)]
 pub struct FunctionCallExpression {
     pub prefix_exp: Box<Expression>,
     pub name_exp: Box<Expression>,
@@ -144,8 +150,10 @@ pub struct FunctionCallExpression {
 }
 impl FunctionCallExpression {}
 
-
 #[test]
 fn format_unary_expression() {
-    print!("{:#?}", Expression::unary_expression("+".to_string(), Expression::NilExpression))
+    print!(
+        "{:#?}",
+        Expression::unary_expression("+".to_string(), Expression::NilExpression)
+    )
 }

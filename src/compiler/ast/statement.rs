@@ -5,7 +5,7 @@ use super::{
     expression::{Expression, FunctionDefinedExpression},
 };
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, PartialOrd)]
 pub enum Statement {
     EmptyStatement,
     BreakStatement,
@@ -66,30 +66,27 @@ impl Statement {
         Statement::AssignStatement(AssignStatement { var_list, exp_list })
     }
 
-    pub fn local_function_defined_statement(
-        name: String,
-        exp: Expression,
-    ) -> Statement {
+    pub fn local_function_defined_statement(name: String, exp: Expression) -> Statement {
         Statement::LocalFunctionDefinedStatement(LocalFunctionDefinedStatement { name, exp })
     }
 }
 
-// #[derive(Debug)]
+// #[derive(Debug, PartialEq, PartialOrd)]
 // pub struct EmptyStatement {}
 
-// #[derive(Debug)]
+// #[derive(Debug, PartialEq, PartialOrd)]
 // pub struct BreakStatement {}
 
 // impl BreakStatement {}
 
-// #[derive(Debug)]
+// #[derive(Debug, PartialEq, PartialOrd)]
 // pub struct LabelStatement {
 //     pub name: String,
 // }
 
 // impl LabelStatement {}
 
-// #[derive(Debug)]
+// #[derive(Debug, PartialEq, PartialOrd)]
 // pub struct GotoStatement {
 //     pub name: String,
 // }
@@ -100,12 +97,12 @@ impl Statement {
 //     }
 // }
 
-// #[derive(Debug)]
+// #[derive(Debug, PartialEq, PartialOrd)]
 // pub struct DotStatement {}
 
 // impl DotStatement {}
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, PartialOrd)]
 pub struct WhileStatement {
     pub condition: Expression,
     pub block: Block,
@@ -117,7 +114,7 @@ impl WhileStatement {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, PartialOrd)]
 pub struct RepeatStatement {
     pub condition: Expression,
     pub block: Block,
@@ -125,20 +122,14 @@ pub struct RepeatStatement {
 
 impl RepeatStatement {}
 
-
+#[derive(Debug, PartialEq, PartialOrd)]
 pub struct IfStatement {
     pub condition: Expression,
     pub then_block: Block,
     pub else_block: Block,
 }
 
-impl Debug for IfStatement {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("IfStatement\n").field("\tcondition", &self.condition).field("\n\tthen_block", &self.then_block).field("\n\telse_block", &self.else_block).finish()
-    }
-}
-
-#[derive(Debug)]
+#[derive(Debug, PartialEq, PartialOrd)]
 pub struct ForStatement {
     pub initial: Expression,
     pub condition: Expression,
@@ -148,7 +139,7 @@ pub struct ForStatement {
 
 impl ForStatement {}
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, PartialOrd)]
 pub struct LocalVarDeclareStatement {
     pub name_list: Vec<String>,
     pub exp_list: Vec<Expression>,
@@ -156,14 +147,14 @@ pub struct LocalVarDeclareStatement {
 
 impl LocalVarDeclareStatement {}
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, PartialOrd)]
 pub struct AssignStatement {
     pub var_list: Vec<Expression>,
     pub exp_list: Vec<Expression>,
 }
 impl AssignStatement {}
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, PartialOrd)]
 pub struct LocalFunctionDefinedStatement {
     pub name: String,
     pub exp: Expression,
