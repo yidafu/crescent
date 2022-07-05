@@ -1,4 +1,4 @@
-use super::op_code::{OP_CODE, OpCodeEnum, OpMode, OpArg};
+use super::op_code::{OP_CODE, OpMode, OpArg};
 
 type Instruction = u32;
 
@@ -27,7 +27,7 @@ trait InstructionOperation {
 
 impl InstructionOperation for Instruction {
     fn op_code(&self) -> usize {
-        (self & 0b11_1111) as usize
+        (self & 0b111_1111) as usize
     }
 
     fn abc(&self) -> (i32, i32, i32) {
@@ -112,9 +112,15 @@ fn test_instruction() {
     }
 
   }
-  let codes: [Instruction; 5] = [81, 11, 32899, 16908356, 16842822];
+  // 0b100000001000000001_1000110
+  let codes: [Instruction; 1] = [0b1010001,];
     for code in codes.iter() {
       print_operands(code.clone());
     }
 
 }
+// 1010001
+// 1000000010000000011000110
+// 81,
+//         8,
+//         16842950,
