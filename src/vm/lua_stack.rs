@@ -1,7 +1,7 @@
 use super::binary_chunk::Value;
 
 #[derive(Debug)]
-struct LuaStack {
+pub struct LuaStack {
   pub slots: Vec<Value>,
   pub top: usize,
 }

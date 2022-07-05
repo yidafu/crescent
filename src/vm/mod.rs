@@ -5,3 +5,4 @@ pub mod op_code;
 pub mod instruction;
 
 pub mod lua_stack;
+pub mod lua_state;
