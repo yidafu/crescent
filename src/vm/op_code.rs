@@ -6,7 +6,6 @@ pub enum OpMode {
     IAx,
 }
 
-
 #[derive(Debug, Clone, Copy)]
 pub enum OpArg {
     OpArgN,
@@ -17,51 +16,102 @@ pub enum OpArg {
 
 pub enum OpCodeEnum {
     OpMove,
+    OpLOADI,
+    OpLOADF,
     OpLOADK,
     OpLOADKX,
-    OpLOADBOOL,
+    OpLoadFalse,
+    OpLFalseSkip,
+    OpLoadTrue,
     OpLOADNIL,
-    OpGETUPVAL,
-    OpGETTABUP,
-    OpGETTABLE,
-    OpSETTABUP,
-    OpSETUPVAL,
-    OpSETTABLE,
+    OpGetUpval,
+    OpSetUpval,
+
+    OpGetTabUp,
+    OpGetTable,
+    OpGetI,
+    OpGetField,
+
+    OpSetTabUp,
+    OpSetTable,
+    OpSetI,
+    OpSetField,
+
     OpNEWTABLE,
+
     OpSELF,
-    OpADD,
-    OpSUB,
-    OpMUL,
-    OpMOD,
-    OpPOW,
-    OpDIV,
-    OpIDEV,
+
+    OpADDI,
+
+    OpAddK,
+    OpSubK,
+    OpMulK,
+    OpModK,
+    OpPowK,
+    OpDivK,
+    OpIdivK,
+
+    OpBANDK,
+    OpBORK,
+    OpBXORK,
+
+    OpSHLI,
+    OpSHRI,
+
+    OpAdd,
+    OpSub,
+    OpMul,
+    OpMod,
+    OpPow,
+    OpDiv,
+    OpIdiv,
+
     OpBAND,
     OpBOR,
     OpBXOR,
     OpSHL,
     OpSHR,
+
+    OpMmbin,
+    OpMmbinI,
+    OpMmbinK,
+
     OpUNM,
     OpBNOT,
     OpNOT,
     OpLEN,
+
     OpCONCAT,
+    OpTbc,
     OpJMP,
     OpEQ,
     OpLT,
     OpLE,
-    OpTEST,
-    OpTESTSET,
-    OpCALL,
-    OpTAILCALL,
-    OpRETURN,
-    OpFORLOOP,
-    OpFORREAP,
-    OpTFORCALL,
-    OpSETLIST,
-    OpCLOSUER,
-    OpVARARG,
-    OpEXTRAARG,
+
+    OpEqK,
+    OpEqI,
+    OpLtI,
+    OpLeI,
+    OpGtI,
+    OpGeI,
+
+    OpTest,
+    OpTestSet,
+    OpCall,
+    OpTailCall,
+    OpReturn,
+
+    OpTForRrep,
+    OpTForCall,
+    OpTForLoop,
+
+    OpSetList,
+
+    OpClosure,
+
+    OpVararg,
+
+    OpExtraArg,
 }
 
 pub struct OpCode {
@@ -443,3 +493,12 @@ pub const OP_CODE: [OpCode; 46] = [
         name: "EXTRAARG",
     },
 ];
+
+
+#[test]
+fn test_op_mode() {
+  fn op_mode(mm: u32, ot: u32, it: u32, t: u32, a: u32, m: u32) -> u32 {
+    ((mm) << 7) | ((ot) << 6) | ((it) << 5) | ((t) << 4) | ((a) << 3) | (m)
+  }
+  println!("{:x}", op_mode(0, 0, 1, 0, 1, 0))
+}
