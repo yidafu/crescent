@@ -6,3 +6,5 @@ pub mod instruction;
 
 pub mod lua_stack;
 pub mod lua_state;
+
+pub mod lua_vm;

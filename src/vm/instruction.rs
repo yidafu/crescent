@@ -110,7 +110,7 @@ fn test_instruction() {
             }
         }
     }
-    let codes: [Instruction; 5] = [139, 33027, 131362, 100663598, 16908484];
+    let codes: [Instruction; 3] = [81, 8, 16842950];
     for code in codes.iter() {
         print_operands(code.clone());
     }
@@ -127,6 +127,7 @@ fn test_instruction() {
 
 // print("hello Word!")
 // 81, 11, 32899, 16908356, 16842822
+static  A: u32 = 0b000000000000000000000000_0101_0001;
 // 1       [1]     VARARGPREP      0
 // 2       [1]     GETTABUP        0 0 0   ; _ENV "print"
 // 3       [1]     LOADK           1 1     ; "hello World!"
