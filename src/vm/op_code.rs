@@ -14,6 +14,7 @@ pub enum OpArg {
     OpArgK,
 }
 
+#[derive(Debug)]
 pub enum OpCodeEnum {
     OpMove = 0,
     OpLOADI,
@@ -120,6 +121,14 @@ pub enum OpCodeEnum {
     OpVarArgRerp,
 
     OpExtraArg,
+}
+
+impl TryFrom<usize> for OpCodeEnum {
+    type Error = &'static str;
+
+    fn try_from(value: usize) -> Result<Self, Self::Error> {
+        todo!()
+    }
 }
 
 pub struct OpCode {

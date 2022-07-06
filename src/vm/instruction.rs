@@ -1,11 +1,14 @@
-use super::op_code::{OpArg, OpMode, OP_CODE};
+use super::{
+    lua_state::LuaState,
+    op_code::{OpArg, OpMode, OP_CODE},
+};
 
-type Instruction = u32;
+pub type Instruction = u32;
 
 const MAXARG_Bx: i32 = 1 << 18 - 1;
 const MAXARG_sBx: i32 = MAXARG_Bx >> 1;
 
-trait InstructionOperation {
+pub trait InstructionOperation {
     fn op_code(&self) -> usize;
 
     fn abc(&self) -> (i32, i32, i32);
@@ -23,6 +26,8 @@ trait InstructionOperation {
     fn b_mode(&self) -> OpArg;
 
     fn c_mode(&self) -> OpArg;
+
+    fn execute(&self, state: &LuaState);
 }
 
 impl InstructionOperation for Instruction {
@@ -67,7 +72,12 @@ impl InstructionOperation for Instruction {
     fn c_mode(&self) -> OpArg {
         OP_CODE[self.op_code()].arg_c_mode
     }
+
+    fn execute(&self, state: &LuaState) {
+        todo!()
+    }
 }
+
 
 #[test]
 fn test_instruction() {
@@ -124,10 +134,9 @@ fn test_instruction() {
 // 2       [1]     LOADNIL         0 0     ; 1 out
 // 3       [1]     RETURN          1 1 1   ; 0 out
 
-
 // print("hello Word!")
 // 81, 11, 32899, 16908356, 16842822
-static  A: u32 = 0b000000000000000000000000_0101_0001;
+static A: u32 = 0b000000000000000000000000_0101_0001;
 // 1       [1]     VARARGPREP      0
 // 2       [1]     GETTABUP        0 0 0   ; _ENV "print"
 // 3       [1]     LOADK           1 1     ; "hello World!"
