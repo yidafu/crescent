@@ -15,7 +15,7 @@ pub enum OpArg {
 }
 
 pub enum OpCodeEnum {
-    OpMove,
+    OpMove = 0,
     OpLOADI,
     OpLOADF,
     OpLOADK,
@@ -122,6 +122,7 @@ pub struct OpCode {
     pub op_mode: OpMode,
     pub name: &'static str,
 }
+// const OP_CODE_COUNT: u32 = OpCodeEnum::from(OpCodeEnum::OpExtraArg);
 
 pub const OP_CODE: [OpCode; 46] = [
     OpCode {
@@ -497,8 +498,8 @@ pub const OP_CODE: [OpCode; 46] = [
 
 #[test]
 fn test_op_mode() {
-  fn op_mode(mm: u32, ot: u32, it: u32, t: u32, a: u32, m: u32) -> u32 {
-    ((mm) << 7) | ((ot) << 6) | ((it) << 5) | ((t) << 4) | ((a) << 3) | (m)
+  fn op_mode(mm: u32, ot: u32, it: u32, t: u32, A: u32, m: u32) -> u32 {
+    ((mm) << 7) | ((ot) << 6) | ((it) << 5) | ((t) << 4) | ((A) << 3) | (m)
   }
   println!("{:x}", op_mode(0, 0, 1, 0, 1, 0))
 }

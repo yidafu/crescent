@@ -1,4 +1,4 @@
-use super::op_code::{OP_CODE, OpMode, OpArg};
+use super::op_code::{OpArg, OpMode, OP_CODE};
 
 type Instruction = u32;
 
@@ -31,15 +31,15 @@ impl InstructionOperation for Instruction {
     }
 
     fn abc(&self) -> (i32, i32, i32) {
-        let a = (self >> 6 & 0b1111_1111) as i32;
-        let b = (self >> 14 & 0b1_1111_1111) as i32;
-        let c = (self >> 23 & 0b1_1111_1111) as i32;
+        let a = (self >> 7 & 0b1111_1111) as i32;
+        let c = (self >> 16 & 0b1111_1111) as i32;
+        let b = (self >> 24 & 0b1111_1111) as i32;
         (a, b, c)
     }
 
     fn abx(&self) -> (i32, i32) {
-        let a = (self >> 6 & 0b1111_1111) as i32;
-        let bx = (self >> 14) as i32;
+        let a = (self >> 7 & 0b1111_1111) as i32;
+        let bx = (self >> 15) as i32;
         (a, bx)
     }
 
@@ -49,78 +49,86 @@ impl InstructionOperation for Instruction {
     }
 
     fn ax(&self) -> i32 {
-        (self >> 6) as i32
+        (self >> 7) as i32
     }
 
     fn op_name(&self) -> &'static str {
-      OP_CODE[self.op_code()].name
+        OP_CODE[self.op_code()].name
     }
 
     fn op_mode(&self) -> OpMode {
-      OP_CODE[self.op_code()].op_mode
+        OP_CODE[self.op_code()].op_mode
     }
 
     fn b_mode(&self) -> OpArg {
-      OP_CODE[self.op_code()].arg_b_mode
+        OP_CODE[self.op_code()].arg_b_mode
     }
 
     fn c_mode(&self) -> OpArg {
-      OP_CODE[self.op_code()].arg_c_mode
+        OP_CODE[self.op_code()].arg_c_mode
     }
 }
 
 #[test]
 fn test_instruction() {
+    fn print_operands(i: Instruction) {
+        print!("op name => {:?}", i.op_name());
 
-  fn print_operands(i: Instruction) {
-    match i.op_mode() {
-        OpMode::IABC => {
-          let (a, b, c) = i.abc();
-          print!("a => {:?}", a);
-          match i.b_mode() {
-            OpArg::OpArgN => print!("\tb => {:?}", b),
-            _ => print!("\tb => {:?}", -1 - b & 0xFF),
-          }
-          match i.c_mode() {
-            OpArg::OpArgN => print!("\tc => {:?}", c),
-            _ => print!("\tc => {:?}", -1 - c & 0xFF),
-          }
-          println!("");
+        match i.op_mode() {
+            OpMode::IABC => {
+                let (a, b, c) = i.abc();
+                print!("\ta => {:?}", a);
+                match i.b_mode() {
+                    OpArg::OpArgN => print!("\tb => {:?}", b),
+                    _ => print!("\tb => {:?}", -1 - b & 0xFF),
+                }
+                match i.c_mode() {
+                    OpArg::OpArgN => print!("\tc => {:?}", c),
+                    _ => print!("\tc => {:?}", -1 - c & 0xFF),
+                }
+                println!("");
+            }
+            OpMode::IABx => {
+                let (a, bx) = i.abx();
+                print!("\ta => {:?}", a);
+                match i.b_mode() {
+                    OpArg::OpArgK => print!("\tbx => {:?}", -1 - bx),
+                    OpArg::OpArgU => print!("\tbx => {:?}", bx),
+                    _ => (),
+                }
+                println!("");
+            }
+            OpMode::IAsBx => {
+                let (a, sbx) = i.a_sbx();
+                print!("\ta => {:?}\t sbx => {:?}", a, sbx);
+                println!("");
+            }
+            OpMode::IAx => {
+                let ax = i.ax();
+                print!("\tax => {}", ax);
+                println!("");
+            }
         }
-        OpMode::IABx => {
-          let (a, bx) = i.abx();
-          print!("a => {:?}", a);
-          match i.b_mode() {
-              OpArg::OpArgK =>
-                print!("\tbx => {:?}", -1 - bx),
-                OpArg::OpArgU =>
-                print!("\tbx => {:?}", bx),
-              _ => (),
-          }
-          println!("");
-        },
-        OpMode::IAsBx => {
-          let (a, sbx) = i.a_sbx();
-          print!("a => {:?}\t sbx => {:?}", a, sbx);
-          println!("");
-        },
-        OpMode::IAx => {
-          let ax = i.ax();
-          print!("ax => {}", ax);
-          println!("");
-        },
     }
-
-  }
-  // 0b100000001000000001_1000110
-  let codes: [Instruction; 1] = [0b1010001,];
+    let codes: [Instruction; 5] = [139, 33027, 131362, 100663598, 16908484];
     for code in codes.iter() {
-      print_operands(code.clone());
+        print_operands(code.clone());
     }
-
 }
-// 1010001
-// 1000000010000000011000110
+
+// local a
 // 81,
-//         8,
-//         16842950,
+// 8,
+// 16842950,
+// 1       [1]     VARARGPREP      0
+// 2       [1]     LOADNIL         0 0     ; 1 out
+// 3       [1]     RETURN          1 1 1   ; 0 out
+
+
+// print("hello Word!")
+// 81, 11, 32899, 16908356, 16842822
+// 1       [1]     VARARGPREP      0
+// 2       [1]     GETTABUP        0 0 0   ; _ENV "print"
+// 3       [1]     LOADK           1 1     ; "hello World!"
+// 4       [1]     CALL            0 2 1   ; 1 in 0 out
+// 5       [1]     RETURN          0 1 1   ; 0 out
