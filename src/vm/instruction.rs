@@ -74,7 +74,8 @@ impl InstructionOperation for Instruction {
     }
 
     fn execute(&self, state: &LuaState) {
-        todo!()
+        let action = OP_CODE[self.op_code()].action;
+        action(self.clone(), state);
     }
 }
 
