@@ -19,7 +19,7 @@ impl LuaState {
     }
 }
 
-pub trait LuaVm : LuaApi {
+pub trait LuaVm: LuaApi {
     fn get_pc(&self) -> u32;
     fn add_pc(&mut self, n: u32);
     fn fetch(&mut self) -> Instruction;

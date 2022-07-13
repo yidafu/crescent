@@ -1,4 +1,7 @@
-use super::{instruction::{Instruction, load::load_nil}, lua_state::LuaVm};
+use super::{
+    instruction::{load::load_nil, Instruction},
+    lua_state::LuaVm,
+};
 
 #[derive(Debug, Clone, Copy)]
 pub enum OpMode {
@@ -129,15 +132,12 @@ pub enum OpCodeEnum {
 }
 
 impl TryFrom<usize> for OpCodeEnum {
-
     fn try_from(value: usize) -> Result<OpCodeEnum, &'static str> {
         if value > 82 {
             Err("range overflow")
         } else {
-            let op_code: OpCodeEnum = unsafe {
-                ::std::mem::transmute(value as u8)
-              };
-              Ok(op_code)
+            let op_code: OpCodeEnum = unsafe { ::std::mem::transmute(value as u8) };
+            Ok(op_code)
         }
     }
 
@@ -913,7 +913,6 @@ fn test_op_mode() {
     }
     println!("{:x}", op_mode(0, 0, 1, 0, 1, 0))
 }
-
 
 #[test]
 fn test_u8_to_op_code_enum() {

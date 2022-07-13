@@ -46,7 +46,11 @@ impl Lexer {
     pub fn should_be_identifier_token(&mut self) -> Token {
         let token = self.peek_token();
         if token.kind != TokenType::Identifier {
-            panic!("Expect token {:?}, but got {:?}", TokenType::Identifier, token)
+            panic!(
+                "Expect token {:?}, but got {:?}",
+                TokenType::Identifier,
+                token
+            )
         }
         token
     }

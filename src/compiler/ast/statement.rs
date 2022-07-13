@@ -66,10 +66,7 @@ impl Statement {
         Statement::AssignStatement(AssignStatement { var_list, exp_list })
     }
 
-    pub fn local_function_defined_statement(
-        name: String,
-        exp: Expression,
-    ) -> Statement {
+    pub fn local_function_defined_statement(name: String, exp: Expression) -> Statement {
         Statement::LocalFunctionDefinedStatement(LocalFunctionDefinedStatement { name, exp })
     }
 }
@@ -125,7 +122,6 @@ pub struct RepeatStatement {
 
 impl RepeatStatement {}
 
-
 pub struct IfStatement {
     pub condition: Expression,
     pub then_block: Block,
@@ -134,7 +130,11 @@ pub struct IfStatement {
 
 impl Debug for IfStatement {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("IfStatement\n").field("\tcondition", &self.condition).field("\n\tthen_block", &self.then_block).field("\n\telse_block", &self.else_block).finish()
+        f.debug_struct("IfStatement\n")
+            .field("\tcondition", &self.condition)
+            .field("\n\tthen_block", &self.then_block)
+            .field("\n\telse_block", &self.else_block)
+            .finish()
     }
 }
 

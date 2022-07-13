@@ -1,4 +1,4 @@
 pub mod block;
 pub mod expression;
-pub mod statement;
 mod node;
+pub mod statement;
