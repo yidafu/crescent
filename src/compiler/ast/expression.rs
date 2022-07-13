@@ -81,9 +81,11 @@ impl Expression {
         key_exps: Vec<Expression>,
         value_exps: Vec<Expression>,
     ) -> Expression {
-        Expression::TableConstructorExpression(TableConstructorExpression { key_exps, value_exps })
+        Expression::TableConstructorExpression(TableConstructorExpression {
+            key_exps,
+            value_exps,
+        })
     }
-
 }
 
 #[derive(Debug)]
@@ -91,7 +93,6 @@ pub struct UnaryExpression {
     pub operator: String,
     pub exp: Box<Expression>,
 }
-
 
 #[derive(Debug)]
 pub struct BinaryExpression {
@@ -144,8 +145,10 @@ pub struct FunctionCallExpression {
 }
 impl FunctionCallExpression {}
 
-
 #[test]
 fn format_unary_expression() {
-    print!("{:#?}", Expression::unary_expression("+".to_string(), Expression::NilExpression))
+    print!(
+        "{:#?}",
+        Expression::unary_expression("+".to_string(), Expression::NilExpression)
+    )
 }

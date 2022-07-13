@@ -1,3 +1,8 @@
+use super::{
+    instruction::{load::load_nil, Instruction},
+    lua_state::LuaVm,
+};
+
 #[derive(Debug, Clone, Copy)]
 pub enum OpMode {
     IABC,
@@ -5,7 +10,6 @@ pub enum OpMode {
     IAsBx,
     IAx,
 }
-
 
 #[derive(Debug, Clone, Copy)]
 pub enum OpArg {
@@ -15,53 +19,129 @@ pub enum OpArg {
     OpArgK,
 }
 
+#[derive(Debug)]
+#[repr(u8)]
 pub enum OpCodeEnum {
-    OpMove,
+    OpMove = 0,
+    OpLOADI,
+    OpLOADF,
     OpLOADK,
     OpLOADKX,
-    OpLOADBOOL,
+    OpLoadFalse,
+    OpLFalseSkip,
+    OpLoadTrue,
     OpLOADNIL,
-    OpGETUPVAL,
-    OpGETTABUP,
-    OpGETTABLE,
-    OpSETTABUP,
-    OpSETUPVAL,
-    OpSETTABLE,
+    OpGetUpval,
+    OpSetUpval,
+
+    OpGetTabUp,
+    OpGetTable,
+    OpGetI,
+    OpGetField,
+
+    OpSetTabUp,
+    OpSetTable,
+    OpSetI,
+    OpSetField,
+
     OpNEWTABLE,
+
     OpSELF,
-    OpADD,
-    OpSUB,
-    OpMUL,
-    OpMOD,
-    OpPOW,
-    OpDIV,
-    OpIDEV,
+
+    OpADDI,
+
+    OpAddK,
+    OpSubK,
+    OpMulK,
+    OpModK,
+    OpPowK,
+    OpDivK,
+    OpIdivK,
+
+    OpBANDK,
+    OpBORK,
+    OpBXORK,
+
+    OpSHLI,
+    OpSHRI,
+
+    OpAdd,
+    OpSub,
+    OpMul,
+    OpMod,
+    OpPow,
+    OpDiv,
+    OpIdiv,
+
     OpBAND,
     OpBOR,
     OpBXOR,
     OpSHL,
     OpSHR,
+
+    OpMmbin,
+    OpMmbinI,
+    OpMmbinK,
+
     OpUNM,
     OpBNOT,
     OpNOT,
     OpLEN,
+
     OpCONCAT,
-    OpJMP,
-    OpEQ,
-    OpLT,
-    OpLE,
-    OpTEST,
-    OpTESTSET,
-    OpCALL,
-    OpTAILCALL,
-    OpRETURN,
-    OpFORLOOP,
-    OpFORREAP,
-    OpTFORCALL,
-    OpSETLIST,
-    OpCLOSUER,
-    OpVARARG,
-    OpEXTRAARG,
+
+    OpClose,
+    OpTbc,
+    OpJmp,
+    OpEq,
+    OpLt,
+    OpLe,
+
+    OpEqK,
+    OpEqI,
+    OpLtI,
+    OpLeI,
+    OpGtI,
+    OpGeI,
+
+    OpTest,
+    OpTestSet,
+
+    OpCall,
+    OpTailCall,
+
+    OpReturn,
+    OpReturn0,
+    OpReturn1,
+
+    OpForLoop,
+    OpForPrep,
+    OpForCall,
+    OpTForLoop,
+    OpTForCall,
+
+    OpSetList,
+
+    OpClosure,
+
+    OpVararg,
+
+    OpVarArgPrep,
+
+    OpExtraArg,
+}
+
+impl TryFrom<usize> for OpCodeEnum {
+    fn try_from(value: usize) -> Result<OpCodeEnum, &'static str> {
+        if value > 82 {
+            Err("range overflow")
+        } else {
+            let op_code: OpCodeEnum = unsafe { ::std::mem::transmute(value as u8) };
+            Ok(op_code)
+        }
+    }
+
+    type Error = &'static str;
 }
 
 pub struct OpCode {
@@ -71,9 +151,12 @@ pub struct OpCode {
     pub arg_c_mode: OpArg,
     pub op_mode: OpMode,
     pub name: &'static str,
+    pub action: fn(i: Instruction, vm: &mut dyn LuaVm) -> (),
 }
 
-pub const OP_CODE: [OpCode; 46] = [
+fn noop(i: Instruction, vm: &mut dyn LuaVm) {}
+
+pub const OP_CODE: [OpCode; 83] = [
     OpCode {
         test_flag: 0,
         set_a_flag: 1,
@@ -81,6 +164,16 @@ pub const OP_CODE: [OpCode; 46] = [
         arg_c_mode: OpArg::OpArgN,
         op_mode: OpMode::IABC,
         name: "Move",
+        action: noop,
+    },
+    OpCode {
+        test_flag: 0,
+        set_a_flag: 1,
+        arg_b_mode: OpArg::OpArgK,
+        arg_c_mode: OpArg::OpArgN,
+        op_mode: OpMode::IAsBx,
+        name: "LOADKI",
+        action: noop,
     },
     OpCode {
         test_flag: 0,
@@ -88,7 +181,17 @@ pub const OP_CODE: [OpCode; 46] = [
         arg_b_mode: OpArg::OpArgK,
         arg_c_mode: OpArg::OpArgN,
         op_mode: OpMode::IABx,
+        name: "LOADKF",
+        action: noop,
+    },
+    OpCode {
+        test_flag: 0,
+        set_a_flag: 1,
+        arg_b_mode: OpArg::OpArgK,
+        arg_c_mode: OpArg::OpArgN,
+        op_mode: OpMode::IAsBx,
         name: "LOADK",
+        action: noop,
     },
     OpCode {
         test_flag: 0,
@@ -97,6 +200,7 @@ pub const OP_CODE: [OpCode; 46] = [
         arg_c_mode: OpArg::OpArgN,
         op_mode: OpMode::IABx,
         name: "LOADKX",
+        action: noop,
     },
     OpCode {
         test_flag: 0,
@@ -104,7 +208,26 @@ pub const OP_CODE: [OpCode; 46] = [
         arg_b_mode: OpArg::OpArgU,
         arg_c_mode: OpArg::OpArgU,
         op_mode: OpMode::IABC,
-        name: "LOADBOOL",
+        name: "LOADFALSE",
+        action: noop,
+    },
+    OpCode {
+        test_flag: 0,
+        set_a_flag: 1,
+        arg_b_mode: OpArg::OpArgU,
+        arg_c_mode: OpArg::OpArgU,
+        op_mode: OpMode::IABC,
+        name: "LFALSESKIP",
+        action: noop,
+    },
+    OpCode {
+        test_flag: 0,
+        set_a_flag: 1,
+        arg_b_mode: OpArg::OpArgU,
+        arg_c_mode: OpArg::OpArgU,
+        op_mode: OpMode::IABC,
+        name: "LOADTRUE",
+        action: noop,
     },
     OpCode {
         test_flag: 0,
@@ -113,6 +236,7 @@ pub const OP_CODE: [OpCode; 46] = [
         arg_c_mode: OpArg::OpArgN,
         op_mode: OpMode::IABC,
         name: "LOADNIL",
+        action: load_nil,
     },
     OpCode {
         test_flag: 0,
@@ -121,6 +245,16 @@ pub const OP_CODE: [OpCode; 46] = [
         arg_c_mode: OpArg::OpArgN,
         op_mode: OpMode::IABC,
         name: "GETUPVAL",
+        action: noop,
+    },
+    OpCode {
+        test_flag: 0,
+        set_a_flag: 1,
+        arg_b_mode: OpArg::OpArgU,
+        arg_c_mode: OpArg::OpArgN,
+        op_mode: OpMode::IABC,
+        name: "SETUPVAL",
+        action: noop,
     },
     OpCode {
         test_flag: 0,
@@ -129,6 +263,7 @@ pub const OP_CODE: [OpCode; 46] = [
         arg_c_mode: OpArg::OpArgK,
         op_mode: OpMode::IABC,
         name: "GETTABUP",
+        action: noop,
     },
     OpCode {
         test_flag: 0,
@@ -137,6 +272,25 @@ pub const OP_CODE: [OpCode; 46] = [
         arg_c_mode: OpArg::OpArgK,
         op_mode: OpMode::IABC,
         name: "GETTABLE",
+        action: noop,
+    },
+    OpCode {
+        test_flag: 0,
+        set_a_flag: 1,
+        arg_b_mode: OpArg::OpArgR,
+        arg_c_mode: OpArg::OpArgK,
+        op_mode: OpMode::IABC,
+        name: "GETI",
+        action: noop,
+    },
+    OpCode {
+        test_flag: 0,
+        set_a_flag: 1,
+        arg_b_mode: OpArg::OpArgR,
+        arg_c_mode: OpArg::OpArgK,
+        op_mode: OpMode::IABC,
+        name: "GETFIELD",
+        action: noop,
     },
     OpCode {
         test_flag: 0,
@@ -145,6 +299,7 @@ pub const OP_CODE: [OpCode; 46] = [
         arg_c_mode: OpArg::OpArgK,
         op_mode: OpMode::IABC,
         name: "GETTABUP",
+        action: noop,
     },
     OpCode {
         test_flag: 0,
@@ -153,6 +308,7 @@ pub const OP_CODE: [OpCode; 46] = [
         arg_c_mode: OpArg::OpArgN,
         op_mode: OpMode::IABC,
         name: "SETUPVAL",
+        action: noop,
     },
     OpCode {
         test_flag: 0,
@@ -161,6 +317,25 @@ pub const OP_CODE: [OpCode; 46] = [
         arg_c_mode: OpArg::OpArgK,
         op_mode: OpMode::IABC,
         name: "SETTABLE",
+        action: noop,
+    },
+    OpCode {
+        test_flag: 0,
+        set_a_flag: 0,
+        arg_b_mode: OpArg::OpArgK,
+        arg_c_mode: OpArg::OpArgK,
+        op_mode: OpMode::IABC,
+        name: "SETI",
+        action: noop,
+    },
+    OpCode {
+        test_flag: 0,
+        set_a_flag: 0,
+        arg_b_mode: OpArg::OpArgK,
+        arg_c_mode: OpArg::OpArgK,
+        op_mode: OpMode::IABC,
+        name: "SETFIELD",
+        action: noop,
     },
     OpCode {
         test_flag: 0,
@@ -169,6 +344,7 @@ pub const OP_CODE: [OpCode; 46] = [
         arg_c_mode: OpArg::OpArgU,
         op_mode: OpMode::IABC,
         name: "NEWTABLE",
+        action: noop,
     },
     OpCode {
         test_flag: 0,
@@ -177,6 +353,115 @@ pub const OP_CODE: [OpCode; 46] = [
         arg_c_mode: OpArg::OpArgK,
         op_mode: OpMode::IABC,
         name: "SELF",
+        action: noop,
+    },
+    OpCode {
+        test_flag: 0,
+        set_a_flag: 1,
+        arg_b_mode: OpArg::OpArgK,
+        arg_c_mode: OpArg::OpArgK,
+        op_mode: OpMode::IABC,
+        name: "ADDI",
+        action: noop,
+    },
+    OpCode {
+        test_flag: 0,
+        set_a_flag: 1,
+        arg_b_mode: OpArg::OpArgK,
+        arg_c_mode: OpArg::OpArgK,
+        op_mode: OpMode::IABC,
+        name: "ADDK",
+        action: noop,
+    },
+    OpCode {
+        test_flag: 0,
+        set_a_flag: 1,
+        arg_b_mode: OpArg::OpArgK,
+        arg_c_mode: OpArg::OpArgK,
+        op_mode: OpMode::IABC,
+        name: "SUBK",
+        action: noop,
+    },
+    OpCode {
+        test_flag: 0,
+        set_a_flag: 1,
+        arg_b_mode: OpArg::OpArgK,
+        arg_c_mode: OpArg::OpArgK,
+        op_mode: OpMode::IABC,
+        name: "MULK",
+        action: noop,
+    },
+    OpCode {
+        test_flag: 0,
+        set_a_flag: 1,
+        arg_b_mode: OpArg::OpArgK,
+        arg_c_mode: OpArg::OpArgK,
+        op_mode: OpMode::IABC,
+        name: "MODK",
+        action: noop,
+    },
+    OpCode {
+        test_flag: 0,
+        set_a_flag: 1,
+        arg_b_mode: OpArg::OpArgK,
+        arg_c_mode: OpArg::OpArgK,
+        op_mode: OpMode::IABC,
+        name: "POWK",
+        action: noop,
+    },
+    OpCode {
+        test_flag: 0,
+        set_a_flag: 1,
+        arg_b_mode: OpArg::OpArgK,
+        arg_c_mode: OpArg::OpArgK,
+        op_mode: OpMode::IABC,
+        name: "DIVK",
+        action: noop,
+    },
+    OpCode {
+        test_flag: 0,
+        set_a_flag: 1,
+        arg_b_mode: OpArg::OpArgK,
+        arg_c_mode: OpArg::OpArgK,
+        op_mode: OpMode::IABC,
+        name: "IDIVK",
+        action: noop,
+    },
+    OpCode {
+        test_flag: 0,
+        set_a_flag: 1,
+        arg_b_mode: OpArg::OpArgK,
+        arg_c_mode: OpArg::OpArgK,
+        op_mode: OpMode::IABC,
+        name: "BANDK",
+        action: noop,
+    },
+    OpCode {
+        test_flag: 0,
+        set_a_flag: 1,
+        arg_b_mode: OpArg::OpArgK,
+        arg_c_mode: OpArg::OpArgK,
+        op_mode: OpMode::IABC,
+        name: "BORK",
+        action: noop,
+    },
+    OpCode {
+        test_flag: 0,
+        set_a_flag: 1,
+        arg_b_mode: OpArg::OpArgK,
+        arg_c_mode: OpArg::OpArgK,
+        op_mode: OpMode::IABC,
+        name: "SHLI",
+        action: noop,
+    },
+    OpCode {
+        test_flag: 0,
+        set_a_flag: 1,
+        arg_b_mode: OpArg::OpArgK,
+        arg_c_mode: OpArg::OpArgK,
+        op_mode: OpMode::IABC,
+        name: "SHRI",
+        action: noop,
     },
     OpCode {
         test_flag: 0,
@@ -185,6 +470,7 @@ pub const OP_CODE: [OpCode; 46] = [
         arg_c_mode: OpArg::OpArgK,
         op_mode: OpMode::IABC,
         name: "ADD",
+        action: noop,
     },
     OpCode {
         test_flag: 0,
@@ -193,6 +479,7 @@ pub const OP_CODE: [OpCode; 46] = [
         arg_c_mode: OpArg::OpArgK,
         op_mode: OpMode::IABC,
         name: "SUB",
+        action: noop,
     },
     OpCode {
         test_flag: 0,
@@ -201,6 +488,7 @@ pub const OP_CODE: [OpCode; 46] = [
         arg_c_mode: OpArg::OpArgK,
         op_mode: OpMode::IABC,
         name: "MUL",
+        action: noop,
     },
     OpCode {
         test_flag: 0,
@@ -209,6 +497,7 @@ pub const OP_CODE: [OpCode; 46] = [
         arg_c_mode: OpArg::OpArgK,
         op_mode: OpMode::IABC,
         name: "MOD",
+        action: noop,
     },
     OpCode {
         test_flag: 0,
@@ -217,6 +506,7 @@ pub const OP_CODE: [OpCode; 46] = [
         arg_c_mode: OpArg::OpArgK,
         op_mode: OpMode::IABC,
         name: "POW",
+        action: noop,
     },
     OpCode {
         test_flag: 0,
@@ -225,6 +515,7 @@ pub const OP_CODE: [OpCode; 46] = [
         arg_c_mode: OpArg::OpArgK,
         op_mode: OpMode::IABC,
         name: "DIV",
+        action: noop,
     },
     OpCode {
         test_flag: 0,
@@ -233,6 +524,7 @@ pub const OP_CODE: [OpCode; 46] = [
         arg_c_mode: OpArg::OpArgK,
         op_mode: OpMode::IABC,
         name: "IDIV",
+        action: noop,
     },
     OpCode {
         test_flag: 0,
@@ -241,6 +533,7 @@ pub const OP_CODE: [OpCode; 46] = [
         arg_c_mode: OpArg::OpArgK,
         op_mode: OpMode::IABC,
         name: "BAND",
+        action: noop,
     },
     OpCode {
         test_flag: 0,
@@ -249,6 +542,16 @@ pub const OP_CODE: [OpCode; 46] = [
         arg_c_mode: OpArg::OpArgK,
         op_mode: OpMode::IABC,
         name: "BOR",
+        action: noop,
+    },
+    OpCode {
+        test_flag: 0,
+        set_a_flag: 1,
+        arg_b_mode: OpArg::OpArgK,
+        arg_c_mode: OpArg::OpArgK,
+        op_mode: OpMode::IABC,
+        name: "BXOR",
+        action: noop,
     },
     OpCode {
         test_flag: 0,
@@ -257,6 +560,7 @@ pub const OP_CODE: [OpCode; 46] = [
         arg_c_mode: OpArg::OpArgK,
         op_mode: OpMode::IABC,
         name: "SHL",
+        action: noop,
     },
     OpCode {
         test_flag: 0,
@@ -265,6 +569,34 @@ pub const OP_CODE: [OpCode; 46] = [
         arg_c_mode: OpArg::OpArgK,
         op_mode: OpMode::IABC,
         name: "SHR",
+        action: noop,
+    },
+    OpCode {
+        test_flag: 0,
+        set_a_flag: 1,
+        arg_b_mode: OpArg::OpArgK,
+        arg_c_mode: OpArg::OpArgK,
+        op_mode: OpMode::IABC,
+        name: "MMBIN",
+        action: noop,
+    },
+    OpCode {
+        test_flag: 0,
+        set_a_flag: 1,
+        arg_b_mode: OpArg::OpArgK,
+        arg_c_mode: OpArg::OpArgK,
+        op_mode: OpMode::IABC,
+        name: "MMBINI",
+        action: noop,
+    },
+    OpCode {
+        test_flag: 0,
+        set_a_flag: 1,
+        arg_b_mode: OpArg::OpArgK,
+        arg_c_mode: OpArg::OpArgK,
+        op_mode: OpMode::IABC,
+        name: "MMBINK",
+        action: noop,
     },
     OpCode {
         test_flag: 0,
@@ -273,6 +605,7 @@ pub const OP_CODE: [OpCode; 46] = [
         arg_c_mode: OpArg::OpArgN,
         op_mode: OpMode::IABC,
         name: "UNM",
+        action: noop,
     },
     OpCode {
         test_flag: 0,
@@ -281,6 +614,16 @@ pub const OP_CODE: [OpCode; 46] = [
         arg_c_mode: OpArg::OpArgN,
         op_mode: OpMode::IABC,
         name: "BNOT",
+        action: noop,
+    },
+    OpCode {
+        test_flag: 0,
+        set_a_flag: 1,
+        arg_b_mode: OpArg::OpArgR,
+        arg_c_mode: OpArg::OpArgN,
+        op_mode: OpMode::IABC,
+        name: "NOT",
+        action: noop,
     },
     OpCode {
         test_flag: 0,
@@ -289,6 +632,7 @@ pub const OP_CODE: [OpCode; 46] = [
         arg_c_mode: OpArg::OpArgN,
         op_mode: OpMode::IABC,
         name: "LEN",
+        action: noop,
     },
     OpCode {
         test_flag: 0,
@@ -297,6 +641,25 @@ pub const OP_CODE: [OpCode; 46] = [
         arg_c_mode: OpArg::OpArgR,
         op_mode: OpMode::IABC,
         name: "CONCAT",
+        action: noop,
+    },
+    OpCode {
+        test_flag: 0,
+        set_a_flag: 1,
+        arg_b_mode: OpArg::OpArgR,
+        arg_c_mode: OpArg::OpArgR,
+        op_mode: OpMode::IABC,
+        name: "CLOSE",
+        action: noop,
+    },
+    OpCode {
+        test_flag: 1,
+        set_a_flag: 0,
+        arg_b_mode: OpArg::OpArgR,
+        arg_c_mode: OpArg::OpArgN,
+        op_mode: OpMode::IAsBx,
+        name: "TBC",
+        action: noop,
     },
     OpCode {
         test_flag: 1,
@@ -305,6 +668,7 @@ pub const OP_CODE: [OpCode; 46] = [
         arg_c_mode: OpArg::OpArgN,
         op_mode: OpMode::IAsBx,
         name: "JMP",
+        action: noop,
     },
     OpCode {
         test_flag: 1,
@@ -313,6 +677,7 @@ pub const OP_CODE: [OpCode; 46] = [
         arg_c_mode: OpArg::OpArgK,
         op_mode: OpMode::IABC,
         name: "EQ",
+        action: noop,
     },
     OpCode {
         test_flag: 1,
@@ -321,6 +686,7 @@ pub const OP_CODE: [OpCode; 46] = [
         arg_c_mode: OpArg::OpArgK,
         op_mode: OpMode::IABC,
         name: "LT",
+        action: noop,
     },
     OpCode {
         test_flag: 0,
@@ -329,6 +695,61 @@ pub const OP_CODE: [OpCode; 46] = [
         arg_c_mode: OpArg::OpArgK,
         op_mode: OpMode::IABC,
         name: "LE",
+        action: noop,
+    },
+    OpCode {
+        test_flag: 1,
+        set_a_flag: 0,
+        arg_b_mode: OpArg::OpArgK,
+        arg_c_mode: OpArg::OpArgK,
+        op_mode: OpMode::IABC,
+        name: "EQK",
+        action: noop,
+    },
+    OpCode {
+        test_flag: 1,
+        set_a_flag: 0,
+        arg_b_mode: OpArg::OpArgK,
+        arg_c_mode: OpArg::OpArgK,
+        op_mode: OpMode::IABC,
+        name: "EQI",
+        action: noop,
+    },
+    OpCode {
+        test_flag: 1,
+        set_a_flag: 0,
+        arg_b_mode: OpArg::OpArgK,
+        arg_c_mode: OpArg::OpArgK,
+        op_mode: OpMode::IABC,
+        name: "LTI",
+        action: noop,
+    },
+    OpCode {
+        test_flag: 0,
+        set_a_flag: 1,
+        arg_b_mode: OpArg::OpArgK,
+        arg_c_mode: OpArg::OpArgK,
+        op_mode: OpMode::IABC,
+        name: "LEI",
+        action: noop,
+    },
+    OpCode {
+        test_flag: 1,
+        set_a_flag: 0,
+        arg_b_mode: OpArg::OpArgK,
+        arg_c_mode: OpArg::OpArgK,
+        op_mode: OpMode::IABC,
+        name: "GTI",
+        action: noop,
+    },
+    OpCode {
+        test_flag: 0,
+        set_a_flag: 1,
+        arg_b_mode: OpArg::OpArgK,
+        arg_c_mode: OpArg::OpArgK,
+        op_mode: OpMode::IABC,
+        name: "GEI",
+        action: noop,
     },
     OpCode {
         test_flag: 1,
@@ -337,6 +758,7 @@ pub const OP_CODE: [OpCode; 46] = [
         arg_c_mode: OpArg::OpArgU,
         op_mode: OpMode::IABC,
         name: "TEST",
+        action: noop,
     },
     OpCode {
         test_flag: 0,
@@ -345,6 +767,7 @@ pub const OP_CODE: [OpCode; 46] = [
         arg_c_mode: OpArg::OpArgU,
         op_mode: OpMode::IABC,
         name: "TESTSET",
+        action: noop,
     },
     OpCode {
         test_flag: 0,
@@ -353,6 +776,7 @@ pub const OP_CODE: [OpCode; 46] = [
         arg_c_mode: OpArg::OpArgK,
         op_mode: OpMode::IABC,
         name: "CALL",
+        action: noop,
     },
     OpCode {
         test_flag: 0,
@@ -361,6 +785,7 @@ pub const OP_CODE: [OpCode; 46] = [
         arg_c_mode: OpArg::OpArgU,
         op_mode: OpMode::IABC,
         name: "TAILCALL",
+        action: noop,
     },
     OpCode {
         test_flag: 0,
@@ -369,6 +794,25 @@ pub const OP_CODE: [OpCode; 46] = [
         arg_c_mode: OpArg::OpArgN,
         op_mode: OpMode::IABC,
         name: "RETURN",
+        action: noop,
+    },
+    OpCode {
+        test_flag: 0,
+        set_a_flag: 1,
+        arg_b_mode: OpArg::OpArgU,
+        arg_c_mode: OpArg::OpArgN,
+        op_mode: OpMode::IABC,
+        name: "RETURN0",
+        action: noop,
+    },
+    OpCode {
+        test_flag: 0,
+        set_a_flag: 1,
+        arg_b_mode: OpArg::OpArgU,
+        arg_c_mode: OpArg::OpArgN,
+        op_mode: OpMode::IABC,
+        name: "RETURN1",
+        action: noop,
     },
     OpCode {
         test_flag: 0,
@@ -377,6 +821,7 @@ pub const OP_CODE: [OpCode; 46] = [
         arg_c_mode: OpArg::OpArgN,
         op_mode: OpMode::IAsBx,
         name: "FORLOOP",
+        action: noop,
     },
     OpCode {
         test_flag: 0,
@@ -385,6 +830,7 @@ pub const OP_CODE: [OpCode; 46] = [
         arg_c_mode: OpArg::OpArgN,
         op_mode: OpMode::IAsBx,
         name: "FORREAP",
+        action: noop,
     },
     OpCode {
         test_flag: 0,
@@ -393,6 +839,7 @@ pub const OP_CODE: [OpCode; 46] = [
         arg_c_mode: OpArg::OpArgU,
         op_mode: OpMode::IABC,
         name: "FORCALL",
+        action: noop,
     },
     OpCode {
         test_flag: 0,
@@ -400,7 +847,8 @@ pub const OP_CODE: [OpCode; 46] = [
         arg_b_mode: OpArg::OpArgR,
         arg_c_mode: OpArg::OpArgN,
         op_mode: OpMode::IABC,
-        name: "TFORCALL",
+        name: "TFORLOOP",
+        action: noop,
     },
     OpCode {
         test_flag: 0,
@@ -409,6 +857,7 @@ pub const OP_CODE: [OpCode; 46] = [
         arg_c_mode: OpArg::OpArgU,
         op_mode: OpMode::IAsBx,
         name: "TFORCALL",
+        action: noop,
     },
     OpCode {
         test_flag: 0,
@@ -417,6 +866,7 @@ pub const OP_CODE: [OpCode; 46] = [
         arg_c_mode: OpArg::OpArgU,
         op_mode: OpMode::IAsBx,
         name: "SETLIST",
+        action: noop,
     },
     OpCode {
         test_flag: 0,
@@ -425,6 +875,7 @@ pub const OP_CODE: [OpCode; 46] = [
         arg_c_mode: OpArg::OpArgN,
         op_mode: OpMode::IABx,
         name: "CLOSURE",
+        action: noop,
     },
     OpCode {
         test_flag: 0,
@@ -433,6 +884,16 @@ pub const OP_CODE: [OpCode; 46] = [
         arg_c_mode: OpArg::OpArgN,
         op_mode: OpMode::IABC,
         name: "VARARG",
+        action: noop,
+    },
+    OpCode {
+        test_flag: 0,
+        set_a_flag: 1,
+        arg_b_mode: OpArg::OpArgU,
+        arg_c_mode: OpArg::OpArgN,
+        op_mode: OpMode::IABC,
+        name: "VARARGPREP",
+        action: noop,
     },
     OpCode {
         test_flag: 0,
@@ -441,5 +902,31 @@ pub const OP_CODE: [OpCode; 46] = [
         arg_c_mode: OpArg::OpArgU,
         op_mode: OpMode::IAx,
         name: "EXTRAARG",
+        action: noop,
     },
 ];
+
+#[test]
+fn test_op_mode() {
+    fn op_mode(mm: u32, ot: u32, it: u32, t: u32, A: u32, m: u32) -> u32 {
+        ((mm) << 7) | ((ot) << 6) | ((it) << 5) | ((t) << 4) | ((A) << 3) | (m)
+    }
+    println!("{:x}", op_mode(0, 0, 1, 0, 1, 0))
+}
+
+#[test]
+fn test_u8_to_op_code_enum() {
+    let op_code = OpCodeEnum::try_from(0).unwrap();
+    match op_code {
+        OpCodeEnum::OpMove => assert!(true),
+        _ => assert!(false),
+    }
+
+    let op_code_2 = OpCodeEnum::try_from(82).unwrap();
+    match op_code_2 {
+        OpCodeEnum::OpExtraArg => assert!(true),
+        _ => assert!(false),
+    }
+
+    assert_eq!(OpCodeEnum::try_from(100).err().unwrap(), "range overflow")
+}

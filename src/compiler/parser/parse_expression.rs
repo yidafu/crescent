@@ -4,7 +4,7 @@ use crate::compiler::{
 };
 
 use super::{
-    parser::parse_block, parse_table_constructor_expression::parse_table_constructor_expression,
+    parse_table_constructor_expression::parse_table_constructor_expression, parser::parse_block,
 };
 
 pub fn parse_expression_list(lexer: &mut Lexer) -> Vec<Expression> {

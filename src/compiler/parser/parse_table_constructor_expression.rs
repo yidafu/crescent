@@ -72,10 +72,12 @@ pub fn is_field_separator(token: Token) -> bool {
     }
 }
 
-
 #[test]
 fn test_simple_table_constructor() {
-    let exp = parse_table_constructor_expression(&mut Lexer::create("test.lua", "{  \"x\", \"y\"; x = 1, [30] = 23; 45 } "));
+    let exp = parse_table_constructor_expression(&mut Lexer::create(
+        "test.lua",
+        "{  \"x\", \"y\"; x = 1, [30] = 23; 45 } ",
+    ));
 
     println!("{:#?}", &exp)
 }
