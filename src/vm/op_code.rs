@@ -1,4 +1,4 @@
-use super::{instruction::Instruction, lua_state::LuaVm};
+use super::{instruction::{Instruction, load::load_nil}, lua_state::LuaVm};
 
 #[derive(Debug, Clone, Copy)]
 pub enum OpMode {
@@ -151,10 +151,10 @@ pub struct OpCode {
     pub arg_c_mode: OpArg,
     pub op_mode: OpMode,
     pub name: &'static str,
-    pub action: fn(i: Instruction, vm: &dyn LuaVm) -> (),
+    pub action: fn(i: Instruction, vm: &mut dyn LuaVm) -> (),
 }
 
-fn noop(i: Instruction, vm: &dyn LuaVm) {}
+fn noop(i: Instruction, vm: &mut dyn LuaVm) {}
 
 pub const OP_CODE: [OpCode; 83] = [
     OpCode {
@@ -236,7 +236,7 @@ pub const OP_CODE: [OpCode; 83] = [
         arg_c_mode: OpArg::OpArgN,
         op_mode: OpMode::IABC,
         name: "LOADNIL",
-        action: noop,
+        action: load_nil,
     },
     OpCode {
         test_flag: 0,

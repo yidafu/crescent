@@ -19,7 +19,7 @@ impl LuaState {
     }
 }
 
-pub trait LuaVm {
+pub trait LuaVm : LuaApi {
     fn get_pc(&self) -> u32;
     fn add_pc(&mut self, n: u32);
     fn fetch(&mut self) -> Instruction;
@@ -62,6 +62,7 @@ pub trait LuaApi {
     fn inster(&mut self, index: i32);
     fn rotate(&mut self, index: i32, n: i32);
     fn set_top(&mut self, index: i32);
+    fn push_nil(&mut self);
 }
 
 impl LuaApi for LuaState {
@@ -123,15 +124,19 @@ impl LuaApi for LuaState {
         let new_top = self.abs_index(index);
         assert!(new_top >= 0, "stack underflow");
 
-        let n = self.get_top() - new_top;
+        let n: i32 = (self.get_top() as i32) - (new_top as i32);
         if n > 0 {
             for _ in 0..n {
                 self.stack.pop();
             }
         } else if n < 0 {
-            for _ in 0..n {
+            for _ in n..0 {
                 self.stack.push(Value::Nil)
             }
         }
+    }
+
+    fn push_nil(&mut self) {
+        self.stack.push(Value::Nil);
     }
 }
