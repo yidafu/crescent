@@ -14,5 +14,14 @@ pub fn load_nil(i: Instruction, vm: &mut dyn LuaVm) {
 
 pub fn load_i(i: Instruction, vm: &mut dyn LuaVm) {
     let (a, sbx) = i.a_sbx();
-    println!("LOADI {} {}", a, sbx);
+    vm.push_integer(sbx.into());
+    vm.replace(a);
+}
+
+pub fn add(i: Instruction, vm: &mut dyn LuaVm) {
+    let (a, b, c) = i.abc();
+    vm.get_pk(c);
+    vm.get_pk(b);
+
+    vm.arith_i(a, |a, b| a + b);
 }

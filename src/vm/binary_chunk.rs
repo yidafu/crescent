@@ -85,6 +85,17 @@ pub enum Value {
     String(String),
 }
 
+impl TryInto<i64> for Value {
+    type Error = &'static str;
+
+    fn try_into(self) -> Result<i64, Self::Error> {
+        match self {
+            Value::Integer(val) => Ok(val),
+            _ => Err("must be Value:Integer(i64)"),
+        }
+    }
+}
+
 #[test]
 fn fn_test() {
     let a = [1, 2, 5];

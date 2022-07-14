@@ -52,7 +52,6 @@ fn test_declare_a_variable() {
     load_main(proto);
 }
 
-
 #[test]
 fn test_add_2_number_program() {
     let proto = Prototype {
@@ -63,34 +62,16 @@ fn test_add_2_number_program() {
         is_vararg: 1,
         max_statck_size: 3,
         code: vec![
-            81,
-            // 1000_0000_0000_0000_0000_0000_0000_0001
-            2147483649,
-            2147516545,
-            264,
-            16777506,
-            100728878,
-            16843206,
+            81, // 1000_0000_0000_0000_0000_0000_0000_0001
+            2147483649, 2147516545, 264, 16777506, 100728878, 16843206,
         ],
         constants: vec![],
-        upvalues: vec![
-            Upvalue {
-                instack: 1,
-                index: 0,
-            },
-        ],
-        prototypes: Some(
-            vec![],
-        ),
-        line_info: vec![
-            1,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-        ],
+        upvalues: vec![Upvalue {
+            instack: 1,
+            index: 0,
+        }],
+        prototypes: Some(vec![]),
+        line_info: vec![1, 0, 0, 0, 0, 0, 0],
         abs_line_list: vec![],
         local_variable: vec![
             LocalVariable {
@@ -109,9 +90,7 @@ fn test_add_2_number_program() {
                 end_pc: 7,
             },
         ],
-        upvalue_names: vec![
-            "_ENV".to_string(),
-        ],
+        upvalue_names: vec!["_ENV".to_string()],
     };
 
     load_main(proto);
