@@ -7,7 +7,7 @@ use super::{
 
 pub type Instruction = u32;
 
-const MAXARG_Bx: i32 = 1 << 18 - 1;
+const MAXARG_Bx: i32 = 1 << 17 - 1;
 const MAXARG_sBx: i32 = MAXARG_Bx >> 1;
 
 pub trait InstructionOperation {
@@ -46,7 +46,7 @@ impl InstructionOperation for Instruction {
 
     fn abx(&self) -> (i32, i32) {
         let a = (self >> 7 & 0b1111_1111) as i32;
-        let bx = (self >> 15) as i32;
+        let bx = (self >> 15 & (0b1_1111_1111_1111_1111)) as i32;
         (a, bx)
     }
 

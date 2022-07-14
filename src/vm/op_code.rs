@@ -1,5 +1,5 @@
 use super::{
-    instruction::{load::load_nil, Instruction},
+    instruction::{load::{load_nil, load_i}, Instruction},
     lua_state::LuaVm,
 };
 
@@ -172,8 +172,8 @@ pub const OP_CODE: [OpCode; 83] = [
         arg_b_mode: OpArg::OpArgK,
         arg_c_mode: OpArg::OpArgN,
         op_mode: OpMode::IAsBx,
-        name: "LOADKI",
-        action: noop,
+        name: "LOADI",
+        action: load_i,
     },
     OpCode {
         test_flag: 0,

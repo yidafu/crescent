@@ -11,3 +11,8 @@ pub fn load_nil(i: Instruction, vm: &mut dyn LuaVm) {
     }
     vm.pop(1);
 }
+
+pub fn load_i(i: Instruction, vm: &mut dyn LuaVm) {
+    let (a, sbx) = i.a_sbx();
+    println!("LOADI {} {}", a, sbx);
+}
