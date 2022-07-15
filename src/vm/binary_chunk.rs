@@ -56,12 +56,13 @@ pub struct Prototype {
     pub upvalue_names: Vec<String>,
 }
 
-pub const TAG_NIL: u8 = 0x00;
-pub const TAG_BOOLEAN: u8 = 0x01;
-pub const TAG_NUMBER: u8 = 0x03;
-pub const TAG_INTEGER: u8 = 0x13;
-pub const TAG_SHORT_STRING: u8 = 0x04;
-pub const TAG_LONG_STRING: u8 = 0x14;
+pub const TAG_NIL: u8 = 0b0;
+pub const TAG_FALSE: u8 = 0b1;
+pub const TAG_TRUE: u8 = 0b1_0001;
+pub const TAG_INTEGER: u8 = 0b11;
+pub const TAG_FLOAT: u8 = 0b1_0011;
+pub const TAG_SHORT_STRING: u8 = 0b100;
+pub const TAG_LONG_STRING: u8 = 0b1_100;
 
 #[derive(Debug)]
 pub struct Upvalue {
@@ -92,6 +93,16 @@ impl TryInto<i64> for Value {
         match self {
             Value::Integer(val) => Ok(val),
             _ => Err("must be Value:Integer(i64)"),
+        }
+    }
+}
+impl TryInto<f64> for Value {
+    type Error = &'static str;
+
+    fn try_into(self) -> Result<f64, Self::Error> {
+        match self {
+            Value::Number(val) => Ok(val),
+            _ => Err("must be Value:Number(f64)"),
         }
     }
 }

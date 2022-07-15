@@ -1,12 +1,9 @@
-use crate::vm::reader;
-
 use super::binary_chunk::{
     AbsoluteLine, LocalVariable, Prototype, Upvalue, Value, CINT_SIZE, CSIZET_SIEZE,
     INSTRUCTION_SIZE, LUAC_DATA, LUAC_FORMAT, LUAC_INT, LUAC_NUM, LUAC_VERSION, LUA_INTEGER_SIZE,
-    LUA_NUMBER_SIZE, LUA_SIGNATURE, TAG_BOOLEAN, TAG_INTEGER, TAG_LONG_STRING, TAG_NIL, TAG_NUMBER,
-    TAG_SHORT_STRING,
+    LUA_NUMBER_SIZE, LUA_SIGNATURE, TAG_FALSE, TAG_FLOAT, TAG_INTEGER, TAG_LONG_STRING, TAG_NIL,
+    TAG_SHORT_STRING, TAG_TRUE,
 };
-use std::mem::size_of;
 
 pub type Unsigned = u64;
 
@@ -187,9 +184,10 @@ impl LuaChunkReader {
     pub fn read_constant(&mut self) -> Value {
         match self.read_byte() {
             TAG_NIL => Value::Nil,
-            TAG_BOOLEAN => Value::Boolean(self.read_byte() != 0),
+            TAG_FALSE => Value::Boolean(self.read_byte() != 0),
+            TAG_TRUE => Value::Boolean(self.read_byte() != 0),
             TAG_INTEGER => Value::Integer(self.read_integer()),
-            TAG_NUMBER => Value::Number(self.read_number()),
+            TAG_FLOAT => Value::Number(self.read_number()),
             TAG_SHORT_STRING => Value::String(self.read_string()),
             TAG_LONG_STRING => Value::String(self.read_string()),
             v_tag => panic!("unknown value type: {}", v_tag),
@@ -396,5 +394,19 @@ fn test_read_size() {
     reader.read_byte();
     let proto = reader.read_function_prototype("".to_string()).unwrap();
 
+    println!("{:#?}", proto);
+}
+
+#[test]
+fn dump_chunk_file() {
+    let file = std::fs::File::open("/Users/yidafu/github/Language/crescent/float.luac").unwrap();
+    let mut buf = Vec::new();
+    std::io::BufReader::new(file).read_to_end(&mut buf);
+
+    let mut reader = LuaChunkReader::new(buf);
+
+    reader.check_header();
+    reader.read_byte();
+    let proto = reader.read_function_prototype("".to_string()).unwrap();
     println!("{:#?}", proto);
 }

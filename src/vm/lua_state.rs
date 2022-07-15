@@ -23,10 +23,15 @@ pub trait LuaVm: LuaApi {
     fn get_pc(&self) -> u32;
     fn add_pc(&mut self, n: u32);
     fn fetch(&mut self) -> Instruction;
-    fn get_const(&mut self, idx: u32);
+    fn get_const(&mut self, idx: usize);
     fn get_pk(&mut self, rk: i32);
 
-    fn arith_i(&mut self, t_reg: i32, op_fn: fn(a: i64, a: i64) -> i64);
+    fn arith_i(
+        &mut self,
+        t_reg: i32,
+        i_add: fn(a: i64, a: i64) -> i64,
+        f_add: fn(a: f64, b: f64) -> f64,
+    );
 }
 
 impl LuaVm for LuaState {
@@ -44,20 +49,25 @@ impl LuaVm for LuaState {
         return instr;
     }
 
-    fn get_const(&mut self, idx: u32) {
-        let constant = self.prototype.constants.get(idx as usize).unwrap();
+    fn get_const(&mut self, idx: usize) {
+        let constant = self.prototype.constants.get(idx).unwrap();
         self.stack.push(constant.clone());
     }
 
     fn get_pk(&mut self, rk: i32) {
         if rk > 0xff {
-            self.get_const((rk as u32) & 0xff);
+            self.get_const((rk as usize) & 0xff);
         } else {
             self.push_value(rk);
         }
     }
 
-    fn arith_i(&mut self, t_reg: i32, i_add: fn(a: i64, a: i64) -> i64) {
+    fn arith_i(
+        &mut self,
+        t_reg: i32,
+        i_add: fn(a: i64, a: i64) -> i64,
+        f_add: fn(a: f64, b: f64) -> f64,
+    ) {
         let val_b = self.stack.pop();
         let val_c = self.stack.pop();
         match val_b {
@@ -66,7 +76,11 @@ impl LuaVm for LuaState {
                 self.push_integer(i_add(b, c));
                 self.replace(t_reg);
             }
-            Value::Number(b) => {}
+            Value::Number(b) => {
+                let c: f64 = val_c.try_into().unwrap();
+                self.push_number(f_add(b, c));
+                self.replace(t_reg);
+            }
             _ => (),
         };
     }

@@ -15,7 +15,7 @@ pub trait InstructionOperation {
 
     fn abc(&self) -> (i32, i32, i32);
 
-    fn abx(&self) -> (i32, i32);
+    fn a_bx(&self) -> (i32, i32);
 
     fn a_sbx(&self) -> (i32, i32);
 
@@ -44,7 +44,7 @@ impl InstructionOperation for Instruction {
         (a, b, c)
     }
 
-    fn abx(&self) -> (i32, i32) {
+    fn a_bx(&self) -> (i32, i32) {
         let a = (self >> 7 & 0b1111_1111) as i32;
 
         let bx = (self >> 15 & (0x1_ff_ff)) as i32;
@@ -52,7 +52,7 @@ impl InstructionOperation for Instruction {
     }
 
     fn a_sbx(&self) -> (i32, i32) {
-        let (a, bx) = self.abx();
+        let (a, bx) = self.a_bx();
         (a, bx - MAXARG_sBx)
     }
 
@@ -102,7 +102,7 @@ fn test_instruction() {
                 println!("");
             }
             OpMode::IABx => {
-                let (a, bx) = i.abx();
+                let (a, bx) = i.a_bx();
                 print!("\ta => {:?}", a);
                 match i.b_mode() {
                     OpArg::OpArgK => print!("\tbx => {:?}", -1 - bx),

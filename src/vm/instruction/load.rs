@@ -18,10 +18,17 @@ pub fn load_i(i: Instruction, vm: &mut dyn LuaVm) {
     vm.replace(a);
 }
 
+pub fn load_k(i: Instruction, vm: &mut dyn LuaVm) {
+    let (a, bx) = i.a_bx();
+    println!("a=>{}, bx=>{}", a, bx);
+    vm.get_const(bx as usize);
+    vm.replace(a);
+}
+
 pub fn add(i: Instruction, vm: &mut dyn LuaVm) {
     let (a, b, c) = i.abc();
     vm.get_pk(c);
     vm.get_pk(b);
 
-    vm.arith_i(a, |a, b| a + b);
+    vm.arith_i(a, |a, b| a + b, |a, b| a + b);
 }
