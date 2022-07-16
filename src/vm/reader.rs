@@ -1,7 +1,7 @@
 use std::io::Read;
 
 use super::binary_chunk::{
-    AbsoluteLine, LocalVariable, Prototype, Upvalue, Value, INSTRUCTION_SIZE, LUAC_DATA,
+    AbsoluteLine, LocalVariable, LuaValue, Prototype, Upvalue, INSTRUCTION_SIZE, LUAC_DATA,
     LUAC_FORMAT, LUAC_INT, LUAC_NUM, LUAC_VERSION, LUA_INTEGER_SIZE, LUA_NUMBER_SIZE,
     LUA_SIGNATURE, TAG_FALSE, TAG_FLOAT, TAG_INTEGER, TAG_LONG_STRING, TAG_NIL, TAG_SHORT_STRING,
     TAG_TRUE,
@@ -174,7 +174,7 @@ impl LuaChunkReader {
         codes
     }
 
-    pub fn read_constants(&mut self) -> Vec<Value> {
+    pub fn read_constants(&mut self) -> Vec<LuaValue> {
         let mut constants = Vec::new();
         let const_len = self.read_int();
         for _ in 0..const_len {
@@ -183,15 +183,15 @@ impl LuaChunkReader {
         constants
     }
 
-    pub fn read_constant(&mut self) -> Value {
+    pub fn read_constant(&mut self) -> LuaValue {
         match self.read_byte() {
-            TAG_NIL => Value::Nil,
-            TAG_FALSE => Value::Boolean(self.read_byte() != 0),
-            TAG_TRUE => Value::Boolean(self.read_byte() != 0),
-            TAG_INTEGER => Value::Integer(self.read_integer()),
-            TAG_FLOAT => Value::Number(self.read_number()),
-            TAG_SHORT_STRING => Value::String(self.read_string()),
-            TAG_LONG_STRING => Value::String(self.read_string()),
+            TAG_NIL => LuaValue::Nil,
+            TAG_FALSE => LuaValue::Boolean(self.read_byte() != 0),
+            TAG_TRUE => LuaValue::Boolean(self.read_byte() != 0),
+            TAG_INTEGER => LuaValue::Integer(self.read_integer()),
+            TAG_FLOAT => LuaValue::Number(self.read_number()),
+            TAG_SHORT_STRING => LuaValue::String(self.read_string()),
+            TAG_LONG_STRING => LuaValue::String(self.read_string()),
             v_tag => panic!("unknown value type: {}", v_tag),
         }
     }
@@ -328,7 +328,7 @@ fn test_hello_word_program() {
     assert_eq!(proto.source, "@./hello_word.lua");
     assert_eq!(proto.is_vararg, 1);
     match proto.constants.get(0).unwrap() {
-        Value::String(str) => assert_eq!(str, "print"),
+        LuaValue::String(str) => assert_eq!(str, "print"),
         _ => panic!("not print string"),
     }
     assert_eq!(proto.upvalue_names[0], "_ENV");

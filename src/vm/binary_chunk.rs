@@ -47,7 +47,7 @@ pub struct Prototype {
     pub is_vararg: u8,
     pub max_statck_size: u8,
     pub code: Vec<u32>,
-    pub constants: Vec<Value>,
+    pub constants: Vec<LuaValue>,
     pub upvalues: Vec<Upvalue>,
     pub prototypes: Option<Vec<Prototype>>,
     pub line_info: Vec<u8>,
@@ -78,7 +78,7 @@ pub struct LocalVariable {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum Value {
+pub enum LuaValue {
     Nil,
     Boolean(bool),
     Integer(i64),
@@ -86,23 +86,47 @@ pub enum Value {
     String(String),
 }
 
-impl TryInto<i64> for Value {
+impl TryInto<i64> for LuaValue {
     type Error = &'static str;
 
     fn try_into(self) -> Result<i64, Self::Error> {
         match self {
-            Value::Integer(val) => Ok(val),
-            _ => Err("must be Value:Integer(i64)"),
+            LuaValue::Integer(val) => Ok(val),
+            LuaValue::Number(v) => Ok(v.round() as i64),
+            LuaValue::String(v) => {
+                let res = v.parse::<i64>();
+                if res.is_ok() {
+                    Ok(res.unwrap())
+                } else {
+                    let f_res = v.parse::<f64>();
+                    if f_res.is_ok() {
+                        Ok(f_res.unwrap().round() as i64)
+                    } else {
+                        Err("could not convert string to int")
+                    }
+                }
+            }
+            _ => Err("Lua Value must be Integer/Number/String"),
         }
     }
 }
-impl TryInto<f64> for Value {
+
+impl TryInto<f64> for LuaValue {
     type Error = &'static str;
 
     fn try_into(self) -> Result<f64, Self::Error> {
         match self {
-            Value::Number(val) => Ok(val),
-            _ => Err("must be Value:Number(f64)"),
+            LuaValue::Integer(v) => Ok(v as f64),
+            LuaValue::Number(v) => Ok(v),
+            LuaValue::String(v) => {
+                let res = v.parse::<f64>();
+                if res.is_ok() {
+                    Ok(res.unwrap())
+                } else {
+                    Err("could not convert String to Number")
+                }
+            }
+            _ => Err("Lua Value must be Integer/Number/String"),
         }
     }
 }

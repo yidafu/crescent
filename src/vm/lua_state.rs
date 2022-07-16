@@ -1,4 +1,4 @@
-use crate::vm::binary_chunk::Value;
+use crate::vm::binary_chunk::LuaValue;
 
 use super::{binary_chunk::Prototype, instruction::Instruction, lua_stack::LuaStack};
 
@@ -26,11 +26,10 @@ pub trait LuaVm: LuaApi {
     fn get_const(&mut self, idx: usize);
     fn get_pk(&mut self, rk: i32);
 
-    fn arith_i(
+    fn arith(
         &mut self,
-        t_reg: i32,
-        i_add: fn(a: i64, a: i64) -> i64,
-        f_add: fn(a: f64, b: f64) -> f64,
+        i_func: Option<fn(a: i64, a: i64) -> i64>,
+        f_func: Option<fn(a: f64, b: f64) -> f64>,
     );
 }
 
@@ -62,27 +61,33 @@ impl LuaVm for LuaState {
         }
     }
 
-    fn arith_i(
+    fn arith(
         &mut self,
-        t_reg: i32,
-        i_add: fn(a: i64, a: i64) -> i64,
-        f_add: fn(a: f64, b: f64) -> f64,
+        i_func: Option<fn(a: i64, a: i64) -> i64>,
+        f_func: Option<fn(a: f64, b: f64) -> f64>,
     ) {
         let val_b = self.stack.pop();
         let val_c = self.stack.pop();
-        match val_b {
-            Value::Integer(b) => {
-                let c: i64 = val_c.try_into().unwrap();
-                self.push_integer(i_add(b, c));
-                self.replace(t_reg);
+
+        // TODO: remove clone method
+        let b = val_b.clone().try_into();
+        let c = val_c.clone().try_into();
+        if f_func.is_none() {
+            if i_func.is_some() {
+                let d = i_func.unwrap()(b.unwrap(), c.unwrap());
+                self.push_integer(d);
             }
-            Value::Number(b) => {
-                let c: f64 = val_c.try_into().unwrap();
-                self.push_number(f_add(b, c));
-                self.replace(t_reg);
+        } else {
+            if i_func.is_some() {
+                let d = i_func.unwrap()(b.unwrap(), c.unwrap());
+                self.push_integer(d);
+                return;
             }
-            _ => (),
-        };
+            let f_b = val_b.try_into();
+            let f_c = val_c.try_into();
+            let d = f_func.unwrap()(f_b.unwrap(), f_c.unwrap());
+            self.push_number(d);
+        }
     }
 }
 
@@ -103,6 +108,12 @@ pub trait LuaApi {
     fn push_boolean(&mut self, val: bool);
     fn push_string(&mut self, val: String);
     fn push_number(&mut self, val: f64);
+
+    fn is_number(&mut self, idx: usize) -> bool;
+    fn to_numberx(&mut self, idx: usize) -> Option<f64>;
+
+    fn is_integer(&mut self, idx: usize) -> bool;
+    fn to_integer(&mut self, idx: usize) -> Option<i64>;
 }
 
 impl LuaApi for LuaState {
@@ -171,28 +182,53 @@ impl LuaApi for LuaState {
             }
         } else if n < 0 {
             for _ in n..0 {
-                self.stack.push(Value::Nil)
+                self.stack.push(LuaValue::Nil)
             }
         }
     }
 
     fn push_nil(&mut self) {
-        self.stack.push(Value::Nil);
+        self.stack.push(LuaValue::Nil);
     }
 
     fn push_integer(&mut self, val: i64) {
-        self.stack.push(Value::Integer(val));
+        self.stack.push(LuaValue::Integer(val));
     }
 
     fn push_boolean(&mut self, val: bool) {
-        self.stack.push(Value::Boolean(val));
+        self.stack.push(LuaValue::Boolean(val));
     }
 
     fn push_string(&mut self, val: String) {
-        self.stack.push(Value::String(val));
+        self.stack.push(LuaValue::String(val));
     }
 
     fn push_number(&mut self, val: f64) {
-        self.stack.push(Value::Number(val));
+        self.stack.push(LuaValue::Number(val));
+    }
+
+    fn is_number(&mut self, idx: usize) -> bool {
+        self.to_numberx(idx).is_some()
+    }
+
+    fn to_numberx(&mut self, idx: usize) -> Option<f64> {
+        let val = self.stack.get(idx.try_into().unwrap());
+        match val {
+            LuaValue::Integer(v) => Some(v as f64),
+            LuaValue::Number(v) => Some(v),
+            _ => None,
+        }
+    }
+
+    fn is_integer(&mut self, idx: usize) -> bool {
+        self.to_integer(idx).is_some()
+    }
+
+    fn to_integer(&mut self, idx: usize) -> Option<i64> {
+        let val = self.stack.get(idx as i32);
+        match val {
+            LuaValue::Integer(v) => Some(v),
+            _ => None,
+        }
     }
 }

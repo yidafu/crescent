@@ -1,8 +1,8 @@
-use super::binary_chunk::Value;
+use super::binary_chunk::LuaValue;
 
 #[derive(Debug)]
 pub struct LuaStack {
-    pub slots: Vec<Value>,
+    pub slots: Vec<LuaValue>,
     pub top: usize,
 }
 
@@ -17,16 +17,16 @@ impl LuaStack {
     pub fn check(&mut self, n: usize) {
         let free = self.slots.len() - self.top;
         for _ in free..n {
-            self.slots.push(Value::Nil);
+            self.slots.push(LuaValue::Nil);
         }
     }
 
-    pub fn push(&mut self, val: Value) {
+    pub fn push(&mut self, val: LuaValue) {
         self.slots.push(val);
         self.top += 1;
     }
 
-    pub fn pop(&mut self) -> Value {
+    pub fn pop(&mut self) -> LuaValue {
         // let slots = self.slots;
         // let top_val = &slots[self.top];
         // slots[self.top] = Value::Nil;
@@ -48,13 +48,13 @@ impl LuaStack {
         0 < abs_idx && abs_idx <= self.top
     }
 
-    pub fn get(&mut self, index: i32) -> Value {
+    pub fn get(&mut self, index: i32) -> LuaValue {
         let abs_idx = self.abs_index(index);
         let val = &self.slots[abs_idx];
         val.clone()
     }
 
-    pub fn set(&mut self, index: i32, val: Value) {
+    pub fn set(&mut self, index: i32, val: LuaValue) {
         let abs_idx = self.abs_index(index);
         self.slots[abs_idx] = val;
     }
@@ -74,20 +74,20 @@ impl LuaStack {
 #[test]
 fn test_lua_stack() {
     let mut stack = LuaStack::new(7);
-    stack.push(Value::Boolean(true));
+    stack.push(LuaValue::Boolean(true));
     assert_eq!(stack.top, 1);
-    stack.push(Value::Integer(1));
+    stack.push(LuaValue::Integer(1));
 
-    stack.push(Value::Number(2.0));
-    stack.push(Value::String("string".to_string()));
-    stack.push(Value::Nil);
+    stack.push(LuaValue::Number(2.0));
+    stack.push(LuaValue::String("string".to_string()));
+    stack.push(LuaValue::Nil);
 
     let pop_value = stack.pop();
-    assert_eq!(pop_value, Value::Nil);
+    assert_eq!(pop_value, LuaValue::Nil);
 
-    assert_eq!(stack.get(2), Value::Number(2.0));
-    stack.set(2, Value::Number(3.0));
-    assert_eq!(stack.get(2), Value::Number(3.0));
+    assert_eq!(stack.get(2), LuaValue::Number(2.0));
+    stack.set(2, LuaValue::Number(3.0));
+    assert_eq!(stack.get(2), LuaValue::Number(3.0));
 
     stack.check(7);
     println!("{:#?}", stack);

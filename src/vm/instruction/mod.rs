@@ -1,3 +1,4 @@
+pub mod arith;
 pub mod load;
 
 use super::{

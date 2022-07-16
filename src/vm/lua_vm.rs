@@ -1,5 +1,5 @@
 use super::{
-    binary_chunk::{LocalVariable, Prototype, Upvalue, Value},
+    binary_chunk::{LocalVariable, LuaValue, Prototype, Upvalue},
     instruction::{Instruction, InstructionOperation},
     lua_state::{LuaApi, LuaState, LuaVm},
     op_code::OpCodeEnum,
@@ -112,7 +112,7 @@ fn test_add_2_float_program() {
         is_vararg: 1,
         max_statck_size: 3,
         code: vec![81, 3, 32899, 264, 16777506, 100728878, 16843206],
-        constants: vec![Value::Number(2.2), Value::Number(3.3)],
+        constants: vec![LuaValue::Number(2.2), LuaValue::Number(3.3)],
         upvalues: vec![Upvalue {
             instack: 1,
             index: 0,
