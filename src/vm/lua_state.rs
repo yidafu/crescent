@@ -4,7 +4,7 @@ use super::{binary_chunk::Prototype, instruction::Instruction, lua_stack::LuaSta
 
 #[derive(Debug)]
 pub struct LuaState {
-    stack: LuaStack,
+    pub stack: LuaStack,
     pub prototype: Prototype,
     pub pc: u32,
 }

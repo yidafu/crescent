@@ -1,5 +1,6 @@
 pub mod arith;
 pub mod load;
+pub mod moving;
 
 use super::{
     lua_state::LuaState,

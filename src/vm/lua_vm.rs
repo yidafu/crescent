@@ -22,6 +22,7 @@ pub fn load_main(prototype: Prototype) {
             }
         }
     }
+    println!("{:#?}", state.stack);
 }
 
 #[test]
@@ -146,5 +147,45 @@ fn test_add_2_float_program() {
     // 5       [2]     ADD             2 0 1
     // 6       [2]     MMBIN           0 1 6   ; __add
     // 7       [2]     RETURN          3 1 1   ; 0 out
+    load_main(proto);
+}
+
+#[test]
+fn test_move_instruction() {
+    let proto = Prototype {
+        source: "@./a.lua".to_string(),
+        line_defined: 0,
+        last_line_defined: 0,
+        num_params: 0,
+        is_vararg: 1,
+        max_statck_size: 2,
+        code: vec![81, 3, 136, 128, 16843078],
+        constants: vec![LuaValue::Number(2.2)],
+        upvalues: vec![Upvalue {
+            instack: 1,
+            index: 0,
+        }],
+        prototypes: Some(vec![]),
+        line_info: vec![1, 0, 0, 1, 0],
+        abs_line_list: vec![],
+        local_variable: vec![
+            LocalVariable {
+                var_name: "a".to_string(),
+                start_pc: 3,
+                end_pc: 5,
+            },
+            LocalVariable {
+                var_name: "b".to_string(),
+                start_pc: 3,
+                end_pc: 5,
+            },
+        ],
+        upvalue_names: vec!["_ENV".to_string()],
+    };
+    // 1       [1]     VARARGPREP      0
+    // 2       [1]     LOADK           0 0     ; 2.2
+    // 3       [1]     LOADNIL         1 0     ; 1 out
+    // 4       [2]     MOVE            1 0
+    // 5       [2]     RETURN          2 1 1   ; 0 out
     load_main(proto);
 }
