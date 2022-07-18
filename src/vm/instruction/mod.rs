@@ -23,6 +23,8 @@ pub trait InstructionOperation {
 
     fn ax(&self) -> i32;
 
+    fn sj(&self) -> i32;
+
     fn op_name(&self) -> &'static str;
 
     fn op_mode(&self) -> OpMode;
@@ -60,6 +62,11 @@ impl InstructionOperation for Instruction {
 
     fn ax(&self) -> i32 {
         (self >> 7) as i32
+    }
+
+    fn sj(&self) -> i32 {
+        let offset_js = ((1 << 25) - 1) >> 1;
+        ((self >> 7) & (0x1_ff_ff_ff)) as i32 - offset_js
     }
 
     fn op_name(&self) -> &'static str {
@@ -141,9 +148,16 @@ fn test_instruction() {
 
 // print("hello Word!")
 // 81, 11, 32899, 16908356, 16842822
-static A: u32 = 0b000000000000000000000000_0101_0001;
+
 // 1       [1]     VARARGPREP      0
 // 2       [1]     GETTABUP        0 0 0   ; _ENV "print"
 // 3       [1]     LOADK           1 1     ; "hello World!"
 // 4       [1]     CALL            0 2 1   ; 1 in 0 out
 // 5       [1]     RETURN          0 1 1   ; 0 out
+
+#[test]
+fn test_inst_move() {
+    let i: Instruction = 2147483448;
+    let sj = i.sj();
+    assert_eq!(sj, -1)
+}

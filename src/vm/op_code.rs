@@ -5,7 +5,7 @@ use super::{
             mul, mul_k, pow, pow_k, shl, shl_i, shr, shr_i, sub, sub_k,
         },
         load::{load_i, load_k, load_kx, load_nil},
-        moving::moving,
+        moving::{jump, moving},
         Instruction,
     },
     lua_state::LuaVm,
@@ -676,7 +676,7 @@ pub const OP_CODE: [OpCode; 83] = [
         arg_c_mode: OpArg::OpArgN,
         op_mode: OpMode::IAsBx,
         name: "JMP",
-        action: noop,
+        action: jump,
     },
     OpCode {
         test_flag: 1,

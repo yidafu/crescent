@@ -21,7 +21,7 @@ impl LuaState {
 
 pub trait LuaVm: LuaApi {
     fn get_pc(&self) -> u32;
-    fn add_pc(&mut self, n: u32);
+    fn add_pc(&mut self, n: i32);
     fn fetch(&mut self) -> Instruction;
     fn get_const(&mut self, idx: usize);
     fn get_pk(&mut self, rk: i32);
@@ -38,8 +38,8 @@ impl LuaVm for LuaState {
         self.pc
     }
 
-    fn add_pc(&mut self, n: u32) {
-        self.pc += n;
+    fn add_pc(&mut self, n: i32) {
+        self.pc = ((self.pc as i32) + n) as u32;
     }
 
     fn fetch(&mut self) -> Instruction {

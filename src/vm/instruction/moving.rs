@@ -7,3 +7,9 @@ pub fn moving(i: Instruction, vm: &mut dyn LuaVm) {
     println!("a:{}, b:{}", a, b);
     vm.copy(b, a);
 }
+
+pub fn jump(i: Instruction, vm: &mut dyn LuaVm) {
+    let sj = i.sj();
+    vm.add_pc(sj);
+    // assert!(a == 0, "TODO");
+}
