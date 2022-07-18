@@ -114,6 +114,12 @@ pub trait LuaApi {
 
     fn is_integer(&mut self, idx: usize) -> bool;
     fn to_integer(&mut self, idx: usize) -> Option<i64>;
+
+    fn is_string(&mut self, idx: i32) -> bool;
+    fn to_string(&mut self, idx: i32) -> Option<String>;
+
+    fn len(&mut self, idx: i32);
+    fn concat(&mut self, idx: usize);
 }
 
 impl LuaApi for LuaState {
@@ -230,5 +236,44 @@ impl LuaApi for LuaState {
             LuaValue::Integer(v) => Some(v),
             _ => None,
         }
+    }
+
+    fn is_string(&mut self, idx: i32) -> bool {
+        self.to_string(idx).is_some()
+    }
+
+    fn to_string(&mut self, idx: i32) -> Option<String> {
+        let val = self.stack.get(idx);
+        match val {
+            LuaValue::String(s) => Some(s),
+            _ => None,
+        }
+    }
+
+    fn len(&mut self, idx: i32) {
+        let val = self.stack.get(idx);
+        match val {
+            LuaValue::String(s) => self.push_integer(s.len() as i64),
+            _ => panic!("Only String has length"),
+        };
+    }
+
+    fn concat(&mut self, idx: usize) {
+        if idx == 0 {
+            self.stack.push(LuaValue::String("".to_string()));
+        } else if idx >= 2 {
+            if self.is_string(-1) && self.is_string(-2) {
+                let s2 = self.to_string(-1).unwrap();
+                let s1 = self.to_string(-2).unwrap();
+                self.stack.pop();
+                self.stack.pop();
+                self.stack.push(LuaValue::String(s1 + &s2));
+            } else {
+                panic!("concat string error!");
+            }
+        }
+        //  else {
+        //     do nothine
+        //  }
     }
 }

@@ -13,3 +13,18 @@ pub fn jump(i: Instruction, vm: &mut dyn LuaVm) {
     vm.add_pc(sj);
     // assert!(a == 0, "TODO");
 }
+
+pub fn len(i: Instruction, vm: &mut dyn LuaVm) {
+    let (a, b, _) = i.abc();
+    vm.len(b);
+    vm.replace(a);
+}
+
+pub fn concat(i: Instruction, vm: &mut dyn LuaVm) {
+    let (a, _, c) = i.abc();
+    // let n = c - b + 1;
+
+    vm.check_stack(c as usize);
+    vm.concat(c as usize);
+    vm.replace(a);
+}

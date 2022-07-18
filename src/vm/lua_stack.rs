@@ -8,10 +8,14 @@ pub struct LuaStack {
 
 impl LuaStack {
     pub fn new(size: usize) -> LuaStack {
-        return LuaStack {
+        let mut stack = LuaStack {
             slots: Vec::with_capacity(size),
             top: 0,
         };
+        for _ in 0..size {
+            stack.slots.push(LuaValue::Nil);
+        }
+        stack
     }
 
     pub fn check(&mut self, n: usize) {
@@ -22,23 +26,24 @@ impl LuaStack {
     }
 
     pub fn push(&mut self, val: LuaValue) {
-        self.slots.push(val);
+        assert!(self.top < self.slots.len(), "stack overflow");
+        self.slots[self.top] = val;
         self.top += 1;
     }
 
     pub fn pop(&mut self) -> LuaValue {
-        // let slots = self.slots;
-        // let top_val = &slots[self.top];
-        // slots[self.top] = Value::Nil;
+        assert!(self.top > 0, "stack underflow");
         self.top -= 1;
-        self.slots.pop().unwrap()
+        let val = self.slots.get_mut(self.top).unwrap().clone();
+        self.slots[self.top] = LuaValue::Nil;
+        val
     }
 
     pub fn abs_index(&self, index: i32) -> usize {
         if index >= 0 {
             index as usize
         } else {
-            ((self.top as i32) + index + 1) as usize
+            ((self.top as i32) + index) as usize
         }
     }
 

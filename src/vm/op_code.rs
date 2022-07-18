@@ -5,7 +5,7 @@ use super::{
             mul, mul_k, pow, pow_k, shl, shl_i, shr, shr_i, sub, sub_k,
         },
         load::{load_i, load_k, load_kx, load_nil},
-        moving::{jump, moving},
+        misc::{concat, jump, len, moving},
         Instruction,
     },
     lua_state::LuaVm,
@@ -640,7 +640,7 @@ pub const OP_CODE: [OpCode; 83] = [
         arg_c_mode: OpArg::OpArgN,
         op_mode: OpMode::IABC,
         name: "LEN",
-        action: noop,
+        action: len,
     },
     OpCode {
         test_flag: 0,
@@ -649,7 +649,7 @@ pub const OP_CODE: [OpCode; 83] = [
         arg_c_mode: OpArg::OpArgR,
         op_mode: OpMode::IABC,
         name: "CONCAT",
-        action: noop,
+        action: concat,
     },
     OpCode {
         test_flag: 0,

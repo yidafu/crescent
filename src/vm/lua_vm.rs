@@ -93,4 +93,30 @@ mod tests {
         // 7       [2]     RETURN          3 1 1   ; 0 out
         load_main(proto);
     }
+
+    #[test]
+    fn test_len_instruction() {
+        let proto = read_prototype_fixture("len.luac");
+        // 1       [1]     VARARGPREP      0
+        // 2       [1]     LOADK           0 0     ; "123"
+        // 3       [1]     LOADNIL         1 0     ; 1 out
+        // 4       [2]     LEN             1 0
+        // 5       [2]     RETURN          2 1 1   ; 0 out
+        load_main(proto);
+    }
+
+    #[test]
+    fn test_concat_instruction() {
+        let proto = read_prototype_fixture("concat.luac");
+
+        // 1       [1]     VARARGPREP      0
+        // 2       [1]     LOADK           0 0     ; "str"
+        // 3       [1]     LOADNIL         1 0     ; 1 out
+        // 4       [2]     MOVE            2 0
+        // 5       [2]     MOVE            3 0
+        // 6       [2]     CONCAT          2 2
+        // 7       [2]     MOVE            1 2
+        // 8       [2]     RETURN          2 1 1   ; 0 out
+        load_main(proto);
+    }
 }
