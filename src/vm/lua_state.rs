@@ -1,6 +1,6 @@
-use crate::vm::binary_chunk::LuaValue;
-
-use super::{binary_chunk::Prototype, instruction::Instruction, lua_stack::LuaStack};
+use super::{
+    binary_chunk::Prototype, instruction::Instruction, lua_stack::LuaStack, lua_value::LuaValue,
+};
 
 #[derive(Debug)]
 pub struct LuaState {
@@ -120,6 +120,8 @@ pub trait LuaApi {
 
     fn len(&mut self, idx: i32);
     fn concat(&mut self, idx: usize);
+
+    fn compare(&mut self, idx1: i32, idex2: i32, op: CampareOperator) -> bool;
 }
 
 impl LuaApi for LuaState {
@@ -276,4 +278,21 @@ impl LuaApi for LuaState {
         //     do nothine
         //  }
     }
+
+    fn compare(&mut self, idx1: i32, idx2: i32, op: CampareOperator) -> bool {
+        let a_val = self.stack.get(idx1);
+        let b_val = self.stack.get(idx2);
+
+        match op {
+            CampareOperator::Equal => a_val == b_val,
+            CampareOperator::LessThen => a_val < b_val,
+            CampareOperator::GreatThen => a_val > b_val,
+        }
+    }
+}
+
+pub enum CampareOperator {
+    Equal,
+    LessThen,
+    GreatThen,
 }

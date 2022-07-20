@@ -1,4 +1,4 @@
-use crate::vm::{binary_chunk::LuaValue, lua_state::LuaVm};
+use crate::vm::lua_state::LuaVm;
 
 use super::{Instruction, InstructionOperation};
 

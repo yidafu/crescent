@@ -1,4 +1,4 @@
-use super::binary_chunk::LuaValue;
+use super::lua_value::LuaValue;
 
 #[derive(Debug)]
 pub struct LuaStack {

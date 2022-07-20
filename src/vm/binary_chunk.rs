@@ -1,3 +1,5 @@
+use super::lua_value::LuaValue;
+
 #[derive(Debug)]
 pub struct BinaryChunk {
     header: Header,
@@ -75,60 +77,6 @@ pub struct LocalVariable {
     pub var_name: String,
     pub start_pc: i32,
     pub end_pc: i32,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum LuaValue {
-    Nil,
-    Boolean(bool),
-    Integer(i64),
-    Number(f64),
-    String(String),
-}
-
-impl TryInto<i64> for LuaValue {
-    type Error = &'static str;
-
-    fn try_into(self) -> Result<i64, Self::Error> {
-        match self {
-            LuaValue::Integer(val) => Ok(val),
-            LuaValue::Number(v) => Ok(v.round() as i64),
-            LuaValue::String(v) => {
-                let res = v.parse::<i64>();
-                if res.is_ok() {
-                    Ok(res.unwrap())
-                } else {
-                    let f_res = v.parse::<f64>();
-                    if f_res.is_ok() {
-                        Ok(f_res.unwrap().round() as i64)
-                    } else {
-                        Err("could not convert string to int")
-                    }
-                }
-            }
-            _ => Err("Lua Value must be Integer/Number/String"),
-        }
-    }
-}
-
-impl TryInto<f64> for LuaValue {
-    type Error = &'static str;
-
-    fn try_into(self) -> Result<f64, Self::Error> {
-        match self {
-            LuaValue::Integer(v) => Ok(v as f64),
-            LuaValue::Number(v) => Ok(v),
-            LuaValue::String(v) => {
-                let res = v.parse::<f64>();
-                if res.is_ok() {
-                    Ok(res.unwrap())
-                } else {
-                    Err("could not convert String to Number")
-                }
-            }
-            _ => Err("Lua Value must be Integer/Number/String"),
-        }
-    }
 }
 
 #[test]

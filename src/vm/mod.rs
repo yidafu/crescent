@@ -1,5 +1,6 @@
 pub mod binary_chunk;
 pub mod instruction;
+pub mod lua_value;
 pub mod op_code;
 pub mod reader;
 pub mod undump;

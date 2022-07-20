@@ -17,8 +17,8 @@ pub fn load_main(prototype: Prototype) {
         match op_code {
             OpCodeEnum::OpReturn => break,
             _code => {
+                println!("pc: {:?}, op name: {:?}", pc, instruction.op_name());
                 instruction.execute(&mut state);
-                println!("pc: {:?}, op name: {:?}", pc + 1, instruction.op_name());
             }
         }
     }
