@@ -4,6 +4,7 @@ use super::{
             add, add_k, b_and, b_and_k, b_or, b_or_k, b_xor, div, div_k, idiv, idiv_k, mod_, mod_k,
             mul, mul_k, pow, pow_k, shl, shl_i, shr, shr_i, sub, sub_k,
         },
+        compare::equal_i,
         load::{load_i, load_k, load_kx, load_nil},
         misc::{concat, jump, len, moving},
         repeat::{for_loop, for_prep},
@@ -722,7 +723,7 @@ pub const OP_CODE: [OpCode; 83] = [
         arg_c_mode: OpArg::OpArgK,
         op_mode: OpMode::IABC,
         name: "EQI",
-        action: noop,
+        action: equal_i,
     },
     OpCode {
         test_flag: 1,

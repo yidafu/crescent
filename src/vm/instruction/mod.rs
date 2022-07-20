@@ -1,4 +1,5 @@
 pub mod arith;
+pub mod compare;
 pub mod load;
 pub mod misc;
 pub mod repeat;
@@ -26,6 +27,10 @@ pub trait InstructionOperation {
 
     fn sj(&self) -> i32;
 
+    fn k(&self) -> i32;
+
+    fn bx(&self) -> i32;
+
     fn op_name(&self) -> &'static str;
 
     fn op_mode(&self) -> OpMode;
@@ -50,7 +55,7 @@ impl InstructionOperation for Instruction {
     }
 
     fn a_bx(&self) -> (i32, i32) {
-        let a = (self >> 7 & 0b1111_1111) as i32;
+        let a = (self >> 7 & 0xff) as i32;
 
         let bx = (self >> 15 & (0x1_ff_ff)) as i32;
         (a, bx)
@@ -69,7 +74,13 @@ impl InstructionOperation for Instruction {
         let offset_js = ((1 << 25) - 1) >> 1;
         ((self >> 7) & (0x1_ff_ff_ff)) as i32 - offset_js
     }
-
+    fn k(&self) -> i32 {
+        (self >> 15 & 0b1) as i32
+    }
+    fn bx(&self) -> i32 {
+        let (_, b, c) = self.abc();
+        b - (((1 << 8) - 1) >> 1)
+    }
     fn op_name(&self) -> &'static str {
         OP_CODE[self.op_code()].name
     }
