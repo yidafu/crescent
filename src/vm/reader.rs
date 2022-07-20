@@ -1,10 +1,13 @@
-use super::binary_chunk::{
-    AbsoluteLine, LocalVariable, Prototype, Upvalue, Value, CINT_SIZE, CSIZET_SIEZE,
-    INSTRUCTION_SIZE, LUAC_DATA, LUAC_FORMAT, LUAC_INT, LUAC_NUM, LUAC_VERSION, LUA_INTEGER_SIZE,
-    LUA_NUMBER_SIZE, LUA_SIGNATURE, TAG_BOOLEAN, TAG_INTEGER, TAG_LONG_STRING, TAG_NIL, TAG_NUMBER,
-    TAG_SHORT_STRING,
+use std::io::Read;
+
+use super::{
+    binary_chunk::{
+        AbsoluteLine, LocalVariable, Prototype, Upvalue, INSTRUCTION_SIZE, LUAC_DATA, LUAC_FORMAT,
+        LUAC_INT, LUAC_NUM, LUAC_VERSION, LUA_INTEGER_SIZE, LUA_NUMBER_SIZE, LUA_SIGNATURE,
+        TAG_FALSE, TAG_FLOAT, TAG_INTEGER, TAG_LONG_STRING, TAG_NIL, TAG_SHORT_STRING, TAG_TRUE,
+    },
+    lua_value::LuaValue,
 };
-use std::mem::size_of;
 
 pub type Unsigned = u64;
 
@@ -28,7 +31,7 @@ impl LuaChunkReader {
         self.read_byte();
     }
 
-    fn read_byte(&mut self) -> u8 {
+    pub fn read_byte(&mut self) -> u8 {
         let byte = self.buffer[self.index];
         self.index += 1;
         self.debug_byte = byte;
@@ -173,7 +176,7 @@ impl LuaChunkReader {
         codes
     }
 
-    pub fn read_constants(&mut self) -> Vec<Value> {
+    pub fn read_constants(&mut self) -> Vec<LuaValue> {
         let mut constants = Vec::new();
         let const_len = self.read_int();
         for _ in 0..const_len {
@@ -182,14 +185,15 @@ impl LuaChunkReader {
         constants
     }
 
-    pub fn read_constant(&mut self) -> Value {
+    pub fn read_constant(&mut self) -> LuaValue {
         match self.read_byte() {
-            TAG_NIL => Value::Nil,
-            TAG_BOOLEAN => Value::Boolean(self.read_byte() != 0),
-            TAG_INTEGER => Value::Integer(self.read_integer()),
-            TAG_NUMBER => Value::Number(self.read_number()),
-            TAG_SHORT_STRING => Value::String(self.read_string()),
-            TAG_LONG_STRING => Value::String(self.read_string()),
+            TAG_NIL => LuaValue::Nil,
+            TAG_FALSE => LuaValue::Boolean(self.read_byte() != 0),
+            TAG_TRUE => LuaValue::Boolean(self.read_byte() != 0),
+            TAG_INTEGER => LuaValue::Integer(self.read_integer()),
+            TAG_FLOAT => LuaValue::Number(self.read_number()),
+            TAG_SHORT_STRING => LuaValue::String(self.read_string()),
+            TAG_LONG_STRING => LuaValue::String(self.read_string()),
             v_tag => panic!("unknown value type: {}", v_tag),
         }
     }
@@ -326,7 +330,7 @@ fn test_hello_word_program() {
     assert_eq!(proto.source, "@./hello_word.lua");
     assert_eq!(proto.is_vararg, 1);
     match proto.constants.get(0).unwrap() {
-        Value::String(str) => assert_eq!(str, "print"),
+        LuaValue::String(str) => assert_eq!(str, "print"),
         _ => panic!("not print string"),
     }
     assert_eq!(proto.upvalue_names[0], "_ENV");
@@ -379,11 +383,34 @@ fn test_echo_function() {
 
 #[test]
 fn test_read_size() {
-    let mut reader = LuaChunkReader::new(vec![0x92, 0x40, 0x2E, 0x2F]);
-    let size = reader.read_size();
-    assert_eq!(size, 18);
+    let mut reader = LuaChunkReader::new(vec![
+        0x1B, 0x4C, 0x75, 0x61, 0x54, 0x00, 0x19, 0x93, 0x0D, 0x0A, 0x1A, 0x0A, 0x04, 0x08, 0x08,
+        0x78, 0x56, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x28, 0x77,
+        0x40, 0x01, 0x87, 0x40, 0x61, 0x2E, 0x6C, 0x75, 0x61, 0x80, 0x80, 0x00, 0x01, 0x03, 0x87,
+        0x51, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x80, 0x81, 0x80, 0x00, 0x80, 0x08, 0x01, 0x00,
+        0x00, 0x22, 0x01, 0x00, 0x01, 0x2E, 0x00, 0x01, 0x06, 0xC6, 0x01, 0x01, 0x01, 0x80, 0x81,
+        0x01, 0x00, 0x00, 0x80, 0x87, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0x83, 0x82,
+        0x61, 0x84, 0x87, 0x82, 0x62, 0x84, 0x87, 0x82, 0x63, 0x84, 0x87, 0x81, 0x85, 0x5F, 0x45,
+        0x4E, 0x56,
+    ]);
 
-    let size_0 = LuaChunkReader::new(vec![0x80, 0x80, 0x00, 0x01]).read_int();
-    assert_eq!(size_0, 1);
-    // const TAIL_LEN: usize = size_of::<Unsigned>() * 8 / 7 - 1;
+    reader.check_header();
+    reader.read_byte();
+    let proto = reader.read_function_prototype("".to_string()).unwrap();
+
+    println!("{:#?}", proto);
+}
+
+#[test]
+fn dump_chunk_file() {
+    let file = std::fs::File::open("/Users/yidafu/github/Language/crescent/loop.luac").unwrap();
+    let mut buf = Vec::new();
+    std::io::BufReader::new(file).read_to_end(&mut buf);
+
+    let mut reader = LuaChunkReader::new(buf);
+
+    reader.check_header();
+    reader.read_byte();
+    let proto = reader.read_function_prototype("".to_string()).unwrap();
+    println!("{:#?}", proto);
 }

@@ -1,4 +1,7 @@
+pub mod arith;
 pub mod load;
+pub mod misc;
+pub mod repeat;
 
 use super::{
     lua_state::LuaState,
@@ -7,7 +10,7 @@ use super::{
 
 pub type Instruction = u32;
 
-const MAXARG_Bx: i32 = 1 << 18 - 1;
+const MAXARG_Bx: i32 = (1 << 17) - 1;
 const MAXARG_sBx: i32 = MAXARG_Bx >> 1;
 
 pub trait InstructionOperation {
@@ -15,11 +18,13 @@ pub trait InstructionOperation {
 
     fn abc(&self) -> (i32, i32, i32);
 
-    fn abx(&self) -> (i32, i32);
+    fn a_bx(&self) -> (i32, i32);
 
     fn a_sbx(&self) -> (i32, i32);
 
     fn ax(&self) -> i32;
+
+    fn sj(&self) -> i32;
 
     fn op_name(&self) -> &'static str;
 
@@ -39,24 +44,30 @@ impl InstructionOperation for Instruction {
 
     fn abc(&self) -> (i32, i32, i32) {
         let a = (self >> 7 & 0b1111_1111) as i32;
-        let c = (self >> 16 & 0b1111_1111) as i32;
-        let b = (self >> 24 & 0b1111_1111) as i32;
+        let b = (self >> 16 & 0b1111_1111) as i32;
+        let c = (self >> 24 & 0b1111_1111) as i32;
         (a, b, c)
     }
 
-    fn abx(&self) -> (i32, i32) {
+    fn a_bx(&self) -> (i32, i32) {
         let a = (self >> 7 & 0b1111_1111) as i32;
-        let bx = (self >> 15) as i32;
+
+        let bx = (self >> 15 & (0x1_ff_ff)) as i32;
         (a, bx)
     }
 
     fn a_sbx(&self) -> (i32, i32) {
-        let (a, bx) = self.abx();
+        let (a, bx) = self.a_bx();
         (a, bx - MAXARG_sBx)
     }
 
     fn ax(&self) -> i32 {
         (self >> 7) as i32
+    }
+
+    fn sj(&self) -> i32 {
+        let offset_js = ((1 << 25) - 1) >> 1;
+        ((self >> 7) & (0x1_ff_ff_ff)) as i32 - offset_js
     }
 
     fn op_name(&self) -> &'static str {
@@ -101,7 +112,7 @@ fn test_instruction() {
                 println!("");
             }
             OpMode::IABx => {
-                let (a, bx) = i.abx();
+                let (a, bx) = i.a_bx();
                 print!("\ta => {:?}", a);
                 match i.b_mode() {
                     OpArg::OpArgK => print!("\tbx => {:?}", -1 - bx),
@@ -138,9 +149,16 @@ fn test_instruction() {
 
 // print("hello Word!")
 // 81, 11, 32899, 16908356, 16842822
-static A: u32 = 0b000000000000000000000000_0101_0001;
+
 // 1       [1]     VARARGPREP      0
 // 2       [1]     GETTABUP        0 0 0   ; _ENV "print"
 // 3       [1]     LOADK           1 1     ; "hello World!"
 // 4       [1]     CALL            0 2 1   ; 1 in 0 out
 // 5       [1]     RETURN          0 1 1   ; 0 out
+
+#[test]
+fn test_inst_move() {
+    let i: Instruction = 2147483448;
+    let sj = i.sj();
+    assert_eq!(sj, -1)
+}

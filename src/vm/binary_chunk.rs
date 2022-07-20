@@ -1,3 +1,5 @@
+use super::lua_value::LuaValue;
+
 #[derive(Debug)]
 pub struct BinaryChunk {
     header: Header,
@@ -47,7 +49,7 @@ pub struct Prototype {
     pub is_vararg: u8,
     pub max_statck_size: u8,
     pub code: Vec<u32>,
-    pub constants: Vec<Value>,
+    pub constants: Vec<LuaValue>,
     pub upvalues: Vec<Upvalue>,
     pub prototypes: Option<Vec<Prototype>>,
     pub line_info: Vec<u8>,
@@ -56,12 +58,13 @@ pub struct Prototype {
     pub upvalue_names: Vec<String>,
 }
 
-pub const TAG_NIL: u8 = 0x00;
-pub const TAG_BOOLEAN: u8 = 0x01;
-pub const TAG_NUMBER: u8 = 0x03;
-pub const TAG_INTEGER: u8 = 0x13;
-pub const TAG_SHORT_STRING: u8 = 0x04;
-pub const TAG_LONG_STRING: u8 = 0x14;
+pub const TAG_NIL: u8 = 0b0;
+pub const TAG_FALSE: u8 = 0b1;
+pub const TAG_TRUE: u8 = 0b1_0001;
+pub const TAG_INTEGER: u8 = 0b11;
+pub const TAG_FLOAT: u8 = 0b1_0011;
+pub const TAG_SHORT_STRING: u8 = 0b100;
+pub const TAG_LONG_STRING: u8 = 0b1_100;
 
 #[derive(Debug)]
 pub struct Upvalue {
@@ -74,15 +77,6 @@ pub struct LocalVariable {
     pub var_name: String,
     pub start_pc: i32,
     pub end_pc: i32,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum Value {
-    Nil,
-    Boolean(bool),
-    Integer(i64),
-    Number(f64),
-    String(String),
 }
 
 #[test]

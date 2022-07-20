@@ -1,5 +1,14 @@
 use super::{
-    instruction::{load::load_nil, Instruction},
+    instruction::{
+        arith::{
+            add, add_k, b_and, b_and_k, b_or, b_or_k, b_xor, div, div_k, idiv, idiv_k, mod_, mod_k,
+            mul, mul_k, pow, pow_k, shl, shl_i, shr, shr_i, sub, sub_k,
+        },
+        load::{load_i, load_k, load_kx, load_nil},
+        misc::{concat, jump, len, moving},
+        repeat::{for_loop, for_prep},
+        Instruction,
+    },
     lua_state::LuaVm,
 };
 
@@ -164,7 +173,7 @@ pub const OP_CODE: [OpCode; 83] = [
         arg_c_mode: OpArg::OpArgN,
         op_mode: OpMode::IABC,
         name: "Move",
-        action: noop,
+        action: moving,
     },
     OpCode {
         test_flag: 0,
@@ -172,17 +181,8 @@ pub const OP_CODE: [OpCode; 83] = [
         arg_b_mode: OpArg::OpArgK,
         arg_c_mode: OpArg::OpArgN,
         op_mode: OpMode::IAsBx,
-        name: "LOADKI",
-        action: noop,
-    },
-    OpCode {
-        test_flag: 0,
-        set_a_flag: 1,
-        arg_b_mode: OpArg::OpArgK,
-        arg_c_mode: OpArg::OpArgN,
-        op_mode: OpMode::IABx,
-        name: "LOADKF",
-        action: noop,
+        name: "LOADI",
+        action: load_i,
     },
     OpCode {
         test_flag: 0,
@@ -191,7 +191,7 @@ pub const OP_CODE: [OpCode; 83] = [
         arg_c_mode: OpArg::OpArgN,
         op_mode: OpMode::IAsBx,
         name: "LOADK",
-        action: noop,
+        action: load_k,
     },
     OpCode {
         test_flag: 0,
@@ -200,7 +200,7 @@ pub const OP_CODE: [OpCode; 83] = [
         arg_c_mode: OpArg::OpArgN,
         op_mode: OpMode::IABx,
         name: "LOADKX",
-        action: noop,
+        action: load_kx,
     },
     OpCode {
         test_flag: 0,
@@ -371,7 +371,7 @@ pub const OP_CODE: [OpCode; 83] = [
         arg_c_mode: OpArg::OpArgK,
         op_mode: OpMode::IABC,
         name: "ADDK",
-        action: noop,
+        action: add_k,
     },
     OpCode {
         test_flag: 0,
@@ -380,7 +380,7 @@ pub const OP_CODE: [OpCode; 83] = [
         arg_c_mode: OpArg::OpArgK,
         op_mode: OpMode::IABC,
         name: "SUBK",
-        action: noop,
+        action: sub_k,
     },
     OpCode {
         test_flag: 0,
@@ -389,7 +389,7 @@ pub const OP_CODE: [OpCode; 83] = [
         arg_c_mode: OpArg::OpArgK,
         op_mode: OpMode::IABC,
         name: "MULK",
-        action: noop,
+        action: mul_k,
     },
     OpCode {
         test_flag: 0,
@@ -398,7 +398,7 @@ pub const OP_CODE: [OpCode; 83] = [
         arg_c_mode: OpArg::OpArgK,
         op_mode: OpMode::IABC,
         name: "MODK",
-        action: noop,
+        action: mod_k,
     },
     OpCode {
         test_flag: 0,
@@ -407,7 +407,7 @@ pub const OP_CODE: [OpCode; 83] = [
         arg_c_mode: OpArg::OpArgK,
         op_mode: OpMode::IABC,
         name: "POWK",
-        action: noop,
+        action: pow_k,
     },
     OpCode {
         test_flag: 0,
@@ -416,7 +416,7 @@ pub const OP_CODE: [OpCode; 83] = [
         arg_c_mode: OpArg::OpArgK,
         op_mode: OpMode::IABC,
         name: "DIVK",
-        action: noop,
+        action: div_k,
     },
     OpCode {
         test_flag: 0,
@@ -425,7 +425,7 @@ pub const OP_CODE: [OpCode; 83] = [
         arg_c_mode: OpArg::OpArgK,
         op_mode: OpMode::IABC,
         name: "IDIVK",
-        action: noop,
+        action: idiv_k,
     },
     OpCode {
         test_flag: 0,
@@ -434,7 +434,7 @@ pub const OP_CODE: [OpCode; 83] = [
         arg_c_mode: OpArg::OpArgK,
         op_mode: OpMode::IABC,
         name: "BANDK",
-        action: noop,
+        action: b_and_k,
     },
     OpCode {
         test_flag: 0,
@@ -443,7 +443,16 @@ pub const OP_CODE: [OpCode; 83] = [
         arg_c_mode: OpArg::OpArgK,
         op_mode: OpMode::IABC,
         name: "BORK",
-        action: noop,
+        action: b_or_k,
+    },
+    OpCode {
+        test_flag: 0,
+        set_a_flag: 1,
+        arg_b_mode: OpArg::OpArgK,
+        arg_c_mode: OpArg::OpArgK,
+        op_mode: OpMode::IABC,
+        name: "BXORK",
+        action: b_or_k,
     },
     OpCode {
         test_flag: 0,
@@ -452,7 +461,7 @@ pub const OP_CODE: [OpCode; 83] = [
         arg_c_mode: OpArg::OpArgK,
         op_mode: OpMode::IABC,
         name: "SHLI",
-        action: noop,
+        action: shl_i,
     },
     OpCode {
         test_flag: 0,
@@ -461,7 +470,7 @@ pub const OP_CODE: [OpCode; 83] = [
         arg_c_mode: OpArg::OpArgK,
         op_mode: OpMode::IABC,
         name: "SHRI",
-        action: noop,
+        action: shr_i,
     },
     OpCode {
         test_flag: 0,
@@ -470,7 +479,7 @@ pub const OP_CODE: [OpCode; 83] = [
         arg_c_mode: OpArg::OpArgK,
         op_mode: OpMode::IABC,
         name: "ADD",
-        action: noop,
+        action: add,
     },
     OpCode {
         test_flag: 0,
@@ -479,7 +488,7 @@ pub const OP_CODE: [OpCode; 83] = [
         arg_c_mode: OpArg::OpArgK,
         op_mode: OpMode::IABC,
         name: "SUB",
-        action: noop,
+        action: sub,
     },
     OpCode {
         test_flag: 0,
@@ -488,7 +497,7 @@ pub const OP_CODE: [OpCode; 83] = [
         arg_c_mode: OpArg::OpArgK,
         op_mode: OpMode::IABC,
         name: "MUL",
-        action: noop,
+        action: mul,
     },
     OpCode {
         test_flag: 0,
@@ -497,7 +506,7 @@ pub const OP_CODE: [OpCode; 83] = [
         arg_c_mode: OpArg::OpArgK,
         op_mode: OpMode::IABC,
         name: "MOD",
-        action: noop,
+        action: mod_,
     },
     OpCode {
         test_flag: 0,
@@ -506,7 +515,7 @@ pub const OP_CODE: [OpCode; 83] = [
         arg_c_mode: OpArg::OpArgK,
         op_mode: OpMode::IABC,
         name: "POW",
-        action: noop,
+        action: pow,
     },
     OpCode {
         test_flag: 0,
@@ -515,7 +524,7 @@ pub const OP_CODE: [OpCode; 83] = [
         arg_c_mode: OpArg::OpArgK,
         op_mode: OpMode::IABC,
         name: "DIV",
-        action: noop,
+        action: div,
     },
     OpCode {
         test_flag: 0,
@@ -524,7 +533,7 @@ pub const OP_CODE: [OpCode; 83] = [
         arg_c_mode: OpArg::OpArgK,
         op_mode: OpMode::IABC,
         name: "IDIV",
-        action: noop,
+        action: idiv,
     },
     OpCode {
         test_flag: 0,
@@ -533,7 +542,7 @@ pub const OP_CODE: [OpCode; 83] = [
         arg_c_mode: OpArg::OpArgK,
         op_mode: OpMode::IABC,
         name: "BAND",
-        action: noop,
+        action: b_and,
     },
     OpCode {
         test_flag: 0,
@@ -542,7 +551,7 @@ pub const OP_CODE: [OpCode; 83] = [
         arg_c_mode: OpArg::OpArgK,
         op_mode: OpMode::IABC,
         name: "BOR",
-        action: noop,
+        action: b_or,
     },
     OpCode {
         test_flag: 0,
@@ -551,7 +560,7 @@ pub const OP_CODE: [OpCode; 83] = [
         arg_c_mode: OpArg::OpArgK,
         op_mode: OpMode::IABC,
         name: "BXOR",
-        action: noop,
+        action: b_xor,
     },
     OpCode {
         test_flag: 0,
@@ -560,7 +569,7 @@ pub const OP_CODE: [OpCode; 83] = [
         arg_c_mode: OpArg::OpArgK,
         op_mode: OpMode::IABC,
         name: "SHL",
-        action: noop,
+        action: shl,
     },
     OpCode {
         test_flag: 0,
@@ -569,7 +578,7 @@ pub const OP_CODE: [OpCode; 83] = [
         arg_c_mode: OpArg::OpArgK,
         op_mode: OpMode::IABC,
         name: "SHR",
-        action: noop,
+        action: shr,
     },
     OpCode {
         test_flag: 0,
@@ -632,7 +641,7 @@ pub const OP_CODE: [OpCode; 83] = [
         arg_c_mode: OpArg::OpArgN,
         op_mode: OpMode::IABC,
         name: "LEN",
-        action: noop,
+        action: len,
     },
     OpCode {
         test_flag: 0,
@@ -641,7 +650,7 @@ pub const OP_CODE: [OpCode; 83] = [
         arg_c_mode: OpArg::OpArgR,
         op_mode: OpMode::IABC,
         name: "CONCAT",
-        action: noop,
+        action: concat,
     },
     OpCode {
         test_flag: 0,
@@ -668,7 +677,7 @@ pub const OP_CODE: [OpCode; 83] = [
         arg_c_mode: OpArg::OpArgN,
         op_mode: OpMode::IAsBx,
         name: "JMP",
-        action: noop,
+        action: jump,
     },
     OpCode {
         test_flag: 1,
@@ -821,7 +830,7 @@ pub const OP_CODE: [OpCode; 83] = [
         arg_c_mode: OpArg::OpArgN,
         op_mode: OpMode::IAsBx,
         name: "FORLOOP",
-        action: noop,
+        action: for_loop,
     },
     OpCode {
         test_flag: 0,
@@ -830,7 +839,7 @@ pub const OP_CODE: [OpCode; 83] = [
         arg_c_mode: OpArg::OpArgN,
         op_mode: OpMode::IAsBx,
         name: "FORREAP",
-        action: noop,
+        action: for_prep,
     },
     OpCode {
         test_flag: 0,
