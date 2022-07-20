@@ -44,8 +44,8 @@ impl InstructionOperation for Instruction {
 
     fn abc(&self) -> (i32, i32, i32) {
         let a = (self >> 7 & 0b1111_1111) as i32;
-        let c = (self >> 16 & 0b1111_1111) as i32;
-        let b = (self >> 24 & 0b1111_1111) as i32;
+        let b = (self >> 16 & 0b1111_1111) as i32;
+        let c = (self >> 24 & 0b1111_1111) as i32;
         (a, b, c)
     }
 
