@@ -66,8 +66,8 @@ impl LuaVm for LuaState {
         i_func: Option<fn(a: i64, a: i64) -> i64>,
         f_func: Option<fn(a: f64, b: f64) -> f64>,
     ) {
-        let val_b = self.stack.pop();
         let val_c = self.stack.pop();
+        let val_b = self.stack.pop();
 
         // TODO: remove clone method
         let b = val_b.clone().try_into();
