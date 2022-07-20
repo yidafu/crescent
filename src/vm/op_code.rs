@@ -6,6 +6,7 @@ use super::{
         },
         load::{load_i, load_k, load_kx, load_nil},
         misc::{concat, jump, len, moving},
+        repeat::for_prep,
         Instruction,
     },
     lua_state::LuaVm,
@@ -838,7 +839,7 @@ pub const OP_CODE: [OpCode; 83] = [
         arg_c_mode: OpArg::OpArgN,
         op_mode: OpMode::IAsBx,
         name: "FORREAP",
-        action: noop,
+        action: for_prep,
     },
     OpCode {
         test_flag: 0,

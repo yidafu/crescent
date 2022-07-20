@@ -119,4 +119,24 @@ mod tests {
         // 8       [2]     RETURN          2 1 1   ; 0 out
         load_main(proto);
     }
+
+    #[test]
+    fn test_sum_of_even_number_in_100() {
+        let proto = read_prototype_fixture("even-number-in-100.luac");
+        //    1       [1]     VARARGPREP      0
+        //     2       [1]     LOADI           0 0
+        //     3       [2]     LOADI           1 5
+        //     4       [2]     LOADI           2 100
+        //     5       [2]     LOADI           3 1
+        //     6       [2]     FORPREP         1 6     ; exit to 14
+        //     7       [3]     MODK            5 4 0   ; 3
+        //     8       [3]     MMBINK          4 0 9 0 ; __mod 3
+        //     9       [3]     EQI             5 0 0
+        //     10      [3]     JMP             2       ; to 13
+        //     11      [4]     ADD             0 0 4
+        //     12      [4]     MMBIN           0 4 6   ; __add
+        //     13      [2]     FORLOOP         1 7     ; to 7
+        //     14      [6]     RETURN          1 1 1   ; 0 out
+        load_main(proto);
+    }
 }

@@ -29,7 +29,7 @@ impl LuaChunkReader {
         self.read_byte();
     }
 
-    fn read_byte(&mut self) -> u8 {
+    pub fn read_byte(&mut self) -> u8 {
         let byte = self.buffer[self.index];
         self.index += 1;
         self.debug_byte = byte;
@@ -401,7 +401,7 @@ fn test_read_size() {
 
 #[test]
 fn dump_chunk_file() {
-    let file = std::fs::File::open("/Users/yidafu/github/Language/crescent/float.luac").unwrap();
+    let file = std::fs::File::open("/Users/yidafu/github/Language/crescent/loop.luac").unwrap();
     let mut buf = Vec::new();
     std::io::BufReader::new(file).read_to_end(&mut buf);
 
