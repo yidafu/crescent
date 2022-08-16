@@ -47,6 +47,7 @@ mod tests {
         reader.check_header();
         reader.read_byte();
         let proto = reader.read_function_prototype("".to_string()).unwrap();
+        println!("Prototype {:#?}", proto);
         proto
     }
 
@@ -122,6 +123,13 @@ mod tests {
 
     #[test]
     fn test_sum_of_even_number_in_100() {
+        /// source code
+        // local sum = 0
+        // for i=5,100 do
+        //   if i % 3 == 0 then
+        //     sum = sum + i;
+        //   end
+        // end
         let proto = read_prototype_fixture("even-number-in-100.luac");
         //    1       [1]     VARARGPREP      0
         //     2       [1]     LOADI           0 0

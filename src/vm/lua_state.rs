@@ -282,7 +282,7 @@ impl LuaApi for LuaState {
     fn compare(&mut self, idx1: i32, idx2: i32, op: CampareOperator) -> bool {
         let a_val = self.stack.get(idx1);
         let b_val = self.stack.get(idx2);
-
+        println!("compare a: {:?}, b: {:?}", a_val, b_val);
         match op {
             CampareOperator::Equal => a_val == b_val,
             CampareOperator::LessThen => a_val < b_val,

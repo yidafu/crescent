@@ -156,3 +156,15 @@ pub fn unm(i: Instruction, vm: &mut dyn LuaVm) {
 pub fn b_not(i: Instruction, vm: &mut dyn LuaVm) {
     arith(i, vm, Some(|a, _| !a), None)
 }
+
+pub fn mm_bin_k(i: Instruction, vm: &mut dyn LuaVm) {
+    let (a, b, c) = i.abc();
+    vm.get_pk(a);
+    vm.get_const(b as usize);
+
+    vm.add_pc(-2);
+    let pc: Instruction = vm.get_pc();
+    let (a2) = pc;
+    vm.get_pk(a2);
+    let flip = i.k();
+}
